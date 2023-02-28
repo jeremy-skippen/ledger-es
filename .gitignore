@@ -1,0 +1,3 @@
+volumes/eventstore.db/data
+volumes/eventstore.db/logs
+volumes/rabbitmq/data
