@@ -8,9 +8,16 @@ Bring the docker project up from the command line by changing into the root dire
 
 Navigate to the project web interface at http://localhost:8080
 
+# References
+ 1. The EventStore website has a [good overview](https://www.eventstore.com/event-sourcing) of event sourcing and how it relates to patterns such as CQRS and DD.
+ 2. The EventStore github [samples repository](https://github.com/EventStore/samples) is a good resource on how to integrate EventStoreDB with other databases for storing read models
+
 # Debugging
 ## EventStore
 The EventStore management interface runs at http://localhost:8081
 
 ## RabbitMQ
 The RabbitMQ management interface runs at http://localhost:8082 with usename `user` and password `password`.
+
+## SQL Server
+The SQL Server instance can be connected to with the connection string `Data Source=localhost,1434;User Id=sa;Password=X13ppP2prRi6fPmW;`

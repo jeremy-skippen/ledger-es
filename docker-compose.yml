@@ -6,14 +6,14 @@ services:
     image: eventstore/eventstore:22.10.1-buster-slim
     hostname: eventdb.ledger-es.local
     environment:
-      - EVENTSTORE_CLUSTER_SIZE=1
-      - EVENTSTORE_RUN_PROJECTIONS=All
-      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
-      - EVENTSTORE_EXT_TCP_PORT=1113
-      - EVENTSTORE_HTTP_PORT=2113
-      - EVENTSTORE_INSECURE=true
-      - EVENTSTORE_ENABLE_EXTERNAL_TCP=true
-      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      EVENTSTORE_CLUSTER_SIZE: "1"
+      EVENTSTORE_RUN_PROJECTIONS: "All"
+      EVENTSTORE_START_STANDARD_PROJECTIONS: "true"
+      EVENTSTORE_EXT_TCP_PORT: "1113"
+      EVENTSTORE_HTTP_PORT: "2113"
+      EVENTSTORE_INSECURE: "true"
+      EVENTSTORE_ENABLE_EXTERNAL_TCP: "true"
+      EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: "true"
     healthcheck:
       test: curl --fail --insecure https://localhost:2113/health/live || exit 1
       interval: 5s
@@ -29,13 +29,35 @@ services:
     volumes:
       - ./volumes/eventstore.db/data:/var/lib/eventstore
       - ./volumes/eventstore.db/logs:/var/log/eventstore
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    hostname: db.ledger-es.local
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "X13ppP2prRi6fPmW"
+      MSSQL_PID: "Developer"
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "X13ppP2prRi6fPmW" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    ports:
+      - 1434:1433
+    networks:
+      ledger-es-default:
+        ipv4_address: 192.168.1.3
+    volumes:
+      - ./volumes/mssql/data:/var/opt/mssql/data
+      - ./volumes/mssql/log:/var/opt/mssql/log
+      - ./volumes/mssql/secrets:/var/opt/mssql/secrets
   rabbitmq:
     image: rabbitmq:3.11-management
     hostname: msgbus.ledger-es.local
     environment:
-      - "RABBITMQ_DEFAULT_USER=user"
-      - "RABBITMQ_DEFAULT_PASS=password"
-      - "RABBITMQ_SECURE_PASSWORD=no"
+      RABBITMQ_DEFAULT_USER: "user"
+      RABBITMQ_DEFAULT_PASS: "password"
+      RABBITMQ_SECURE_PASSWORD: "no"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:15672" ]
       interval: 2s
@@ -49,7 +71,7 @@ services:
       - 8082:15672
     networks:
       ledger-es-default:
-        ipv4_address: 192.168.1.3
+        ipv4_address: 192.168.1.4
     volumes:
       - ./volumes/rabbitmq/etc/enabled_plugins:/etc/rabbitmq/enabled_plugins
       - ./volumes/rabbitmq/etc/20_ledger-es.conf:/etc/rabbitmq/conf.d/20_ledger-es.conf

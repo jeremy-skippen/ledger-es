@@ -1,3 +1,10 @@
+**/*.*proj.user
+**/.vs/*
+**/bin
+**/obj
 volumes/eventstore.db/data
 volumes/eventstore.db/logs
+volumes/mssql/data
+volumes/mssql/log
+volumes/mssql/secrets
 volumes/rabbitmq/data
