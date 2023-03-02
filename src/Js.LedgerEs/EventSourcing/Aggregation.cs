@@ -1,6 +1,6 @@
 ﻿using EventStore.Client;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.EventSourcing;
 
 public static class AggregateStreamExtensions
 {

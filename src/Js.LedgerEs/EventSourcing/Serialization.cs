@@ -3,7 +3,7 @@ using System.Text.Json;
 
 using EventStore.Client;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.EventSourcing;
 
 public class SerializableEventMapper
 {
@@ -47,6 +47,9 @@ public static class SerializationExtensions
         return app;
     }
 
+    public static string GetStreamNameForAggregate<TAggregate>(this Guid id)
+        => $"{typeof(TAggregate).Name.ToLowerInvariant()}-{id:d}";
+
     public static object? DeserializeFromResolvedEvent(this ResolvedEvent resolvedEvent)
     {
         var type = SerializableEventMapper.GetType(resolvedEvent.Event.EventType);
@@ -58,7 +61,7 @@ public static class SerializationExtensions
 
     public static EventData SerializeToEventData<T>(this T @event) where T : class, ISerializableEvent
         => new(
-            @event.EventId,
+            Uuid.FromGuid(@event.EventId),
             SerializableEventMapper.GetName(@event.GetType()) ?? "UnknownEvent",
             JsonSerializer.SerializeToUtf8Bytes(@event),
             JsonSerializer.SerializeToUtf8Bytes(new { })

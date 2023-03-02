@@ -1,7 +1,9 @@
 using EventStore.Client;
 
 using Js.LedgerEs;
-using Js.LedgerEs.OpenLedger;
+using Js.LedgerEs.Commands;
+using Js.LedgerEs.ErrorHandling;
+using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Validation;
 
 using MediatR;
@@ -16,6 +18,7 @@ builder.Configuration
 
 builder.Services
     .AddLogging()
+    .AddAutoMapper(typeof(MappingProfile))
     .AddValidators()
     .AddMediatR(cfg =>
     {
@@ -43,6 +46,7 @@ var app = builder.Build();
 app
     .UseEventSerialization()
     .UseValidation()
+    .UseMiddleware<ApplicationExceptionHandlingMiddleware>()
     .UseSwagger();
 
 if (isDevelopment)
@@ -54,6 +58,30 @@ if (isDevelopment)
     });
 }
 
-app.MapPost("/api/ledger", async (OpenLedger request, IMediator mediator, CancellationToken ct) => await mediator.Send(request, ct));
+app.MapPost("/api/ledger", async (
+    OpenLedger request,
+    IMediator mediator,
+    CancellationToken ct
+) => await mediator.Send(request, ct));
+
+app.MapPost("/api/ledger/{ledgerId:Guid}/receipt", async (
+    Guid ledgerId,
+    JournalReceiptRequestBody request,
+    IMediator mediator,
+    CancellationToken ct
+) => await mediator.Send(new JournalReceipt(ledgerId, request.Description, request.Amount), ct));
+
+app.MapPost("/api/ledger/{ledgerId:Guid}/payment", async (
+    Guid ledgerId,
+    JournalPaymentRequestBody request,
+    IMediator mediator,
+    CancellationToken ct
+) => await mediator.Send(new JournalPayment(ledgerId, request.Description, request.Amount), ct));
+
+app.MapDelete("/api/ledger/{ledgerId:Guid}", async (
+    Guid ledgerId,
+    IMediator mediator,
+    CancellationToken ct
+) => await mediator.Send(new CloseLedger(ledgerId), ct));
 
 app.Run();

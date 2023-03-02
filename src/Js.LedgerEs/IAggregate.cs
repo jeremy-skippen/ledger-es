@@ -2,6 +2,8 @@
 {
     public interface IAggregate
     {
-        public void Apply(object? @event);
+        ulong Version { get; }
+
+        void Apply(object? @event);
     }
 }
