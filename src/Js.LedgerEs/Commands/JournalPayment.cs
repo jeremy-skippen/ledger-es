@@ -4,16 +4,18 @@ using EventStore.Client;
 
 using FluentValidation;
 
+using Js.LedgerEs.EventSourcing;
+
 using MediatR;
 
 namespace Js.LedgerEs.Commands;
 
-public record JournalPaymentRequestBody(
+public sealed record JournalPaymentRequestBody(
     string Description,
     decimal Amount
 );
 
-public record JournalPayment(
+public sealed record JournalPayment(
     Guid LedgerId,
     string Description,
     decimal Amount
@@ -23,7 +25,7 @@ public record JournalPayment(
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }
 
-public class JournalPaymentValidator : AbstractValidator<JournalPayment>
+public sealed class JournalPaymentValidator : AbstractValidator<JournalPayment>
 {
     public JournalPaymentValidator()
     {
@@ -39,17 +41,18 @@ public class JournalPaymentValidator : AbstractValidator<JournalPayment>
     }
 }
 
-public sealed class JournalPaymentHandler : AbstractRequestHandler<JournalPayment, PaymentJournalled, Ledger>
+public sealed class JournalPaymentHandler : AbstractCommandHandler<JournalPayment, PaymentJournalled, Ledger>
 {
     public JournalPaymentHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {
     }
 }
 
-public record PaymentJournalled(
-    Guid EventId,
-    DateTimeOffset EventDateTime,
+public sealed record PaymentJournalled(
     Guid LedgerId,
     string Description,
     decimal Amount
-) : ISerializableEvent;
+) : SerializableEvent
+{
+    public override Guid GetStreamUniqueIdentifier() => LedgerId;
+}

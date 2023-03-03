@@ -4,11 +4,13 @@ using EventStore.Client;
 
 using FluentValidation;
 
+using Js.LedgerEs.EventSourcing;
+
 using MediatR;
 
 namespace Js.LedgerEs.Commands;
 
-public record OpenLedger(
+public sealed record OpenLedger(
     Guid LedgerId,
     string LedgerName
 ) : ICommand,
@@ -17,7 +19,7 @@ public record OpenLedger(
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }
 
-public class OpenLedgerValidator : AbstractValidator<OpenLedger>
+public sealed class OpenLedgerValidator : AbstractValidator<OpenLedger>
 {
     public OpenLedgerValidator()
     {
@@ -30,16 +32,17 @@ public class OpenLedgerValidator : AbstractValidator<OpenLedger>
     }
 }
 
-public sealed class OpenLedgerHandler : AbstractRequestHandler<OpenLedger, LedgerOpened, Ledger>
+public sealed class OpenLedgerHandler : AbstractCommandHandler<OpenLedger, LedgerOpened, Ledger>
 {
     public OpenLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {
     }
 }
 
-public record LedgerOpened(
-    Guid EventId,
-    DateTimeOffset EventDateTime,
+public sealed record LedgerOpened(
     Guid LedgerId,
     string LedgerName
-) : ISerializableEvent;
+) : SerializableEvent
+{
+    public override Guid GetStreamUniqueIdentifier() => LedgerId;
+}

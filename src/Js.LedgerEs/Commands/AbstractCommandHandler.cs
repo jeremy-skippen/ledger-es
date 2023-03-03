@@ -9,9 +9,14 @@ using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.Commands;
 
-public abstract class AbstractRequestHandler<TRequest, TResponse, TAggregate> :
+public interface ICommand
+{
+    Guid GetStreamUniqueIdentifier();
+}
+
+public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
     IRequestHandler<TRequest, TResponse>
         where TRequest : class, ICommand, IRequest<TResponse>
         where TResponse : class, ISerializableEvent
@@ -20,7 +25,7 @@ public abstract class AbstractRequestHandler<TRequest, TResponse, TAggregate> :
     protected IMapper Mapper { get; private set; }
     protected EventStoreClient EventStore { get; private set; }
 
-    public AbstractRequestHandler(IMapper mapper, EventStoreClient eventStore)
+    public AbstractCommandHandler(IMapper mapper, EventStoreClient eventStore)
     {
         Mapper = mapper;
         EventStore = eventStore;
@@ -66,11 +71,9 @@ public abstract class AbstractRequestHandler<TRequest, TResponse, TAggregate> :
 
     protected virtual TResponse MapRequestToEvent(TRequest request)
     {
-        var @event = Mapper.Map<TRequest, TResponse>(request, opts =>
-        {
-            opts.Items[nameof(ISerializableEvent.EventId)] = Guid.NewGuid();
-            opts.Items[nameof(ISerializableEvent.EventDateTime)] = DateTimeOffset.UtcNow;
-        });
+        var @event = Mapper.Map<TRequest, TResponse>(request);
+
+        @event.EventId = Guid.NewGuid();
 
         return @event;
     }

@@ -4,11 +4,13 @@ using EventStore.Client;
 
 using FluentValidation;
 
+using Js.LedgerEs.EventSourcing;
+
 using MediatR;
 
 namespace Js.LedgerEs.Commands;
 
-public record CloseLedger(
+public sealed record CloseLedger(
     Guid LedgerId
 ) : ICommand,
     IRequest<LedgerClosed>
@@ -16,7 +18,7 @@ public record CloseLedger(
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }
 
-public class CloseLedgerValidator : AbstractValidator<CloseLedger>
+public sealed class CloseLedgerValidator : AbstractValidator<CloseLedger>
 {
     public CloseLedgerValidator()
     {
@@ -25,15 +27,16 @@ public class CloseLedgerValidator : AbstractValidator<CloseLedger>
     }
 }
 
-public sealed class CloseLedgerHandler : AbstractRequestHandler<CloseLedger, LedgerClosed, Ledger>
+public sealed class CloseLedgerHandler : AbstractCommandHandler<CloseLedger, LedgerClosed, Ledger>
 {
     public CloseLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {
     }
 }
 
-public record LedgerClosed(
-    Guid EventId,
-    DateTimeOffset EventDateTime,
+public sealed record LedgerClosed(
     Guid LedgerId
-) : ISerializableEvent;
+) : SerializableEvent
+{
+    public override Guid GetStreamUniqueIdentifier() => LedgerId;
+}

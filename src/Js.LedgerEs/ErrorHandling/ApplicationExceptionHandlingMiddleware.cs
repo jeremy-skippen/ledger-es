@@ -39,7 +39,7 @@ public class ApplicationExceptionHandlingMiddleware
             response.ContentType = "application/problem+json";
             response.StatusCode = problem.Status ?? 400;
 
-            await JsonSerializer.SerializeAsync(response.Body, problem, cancellationToken: httpContext.RequestAborted);
+            await JsonSerializer.SerializeAsync(response.Body, problem, JsonConfig.SerializerOptions, httpContext.RequestAborted);
         }
     }
 }

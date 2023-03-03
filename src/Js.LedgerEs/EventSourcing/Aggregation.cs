@@ -2,6 +2,22 @@
 
 namespace Js.LedgerEs.EventSourcing;
 
+public interface IAggregate
+{
+    ulong Version { get; }
+
+    void Apply(object? @event);
+}
+
+public interface IEventHandler
+{
+}
+
+public interface IEventHandler<T> : IEventHandler where T : class
+{
+    void Handle(T @event);
+}
+
 public static class AggregateStreamExtensions
 {
     public static async Task<T?> AggregateStream<T>(

@@ -6,6 +6,8 @@ Bring the docker project up from the command line by changing into the root dire
 
     docker compose up -d
 
+Once the SQL Server instance is up create the database schema by running [schema.sql](src/Js.LedgerEs/ReadModelPersistence/schema.sql) in SSMS.
+
 Navigate to the project web interface at http://localhost:8080
 
 # References

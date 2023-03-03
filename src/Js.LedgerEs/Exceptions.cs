@@ -1,4 +1,4 @@
-﻿using static EventStore.Client.StreamMessage;
+﻿using Js.LedgerEs.EventSourcing;
 
 namespace Js.LedgerEs;
 
