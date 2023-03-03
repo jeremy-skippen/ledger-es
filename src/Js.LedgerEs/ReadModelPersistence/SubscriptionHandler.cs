@@ -9,15 +9,18 @@ using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
-public class SubscriptionHandler
+public interface ISubscriptionHandler
+{
+    Task SubscribeToAll(CancellationToken ct);
+}
+
+public class SubscriptionHandler : ISubscriptionHandler
 {
     private readonly IOptions<LedgerEsConfiguration> _cfg;
     private readonly ILogger<SubscriptionHandler> _logger;
     private readonly EventStoreClient _eventStore;
     private readonly IProjectionRevisionRepository _revisionRepository;
-    private readonly IServiceProvider _services;
-    private readonly IDictionary<Type, IList<Type>> _eventTypeMap;
-    private readonly IDictionary<Type, Type> _aggregateUpdaterMap;
+    private readonly IDictionary<Type, IReadModelUpdater[]> _eventTypeUpdaterMap;
 
     private const string PROJECTION_NAME = "default";
 
@@ -26,72 +29,28 @@ public class SubscriptionHandler
         ILogger<SubscriptionHandler> logger,
         EventStoreClient eventStore,
         IProjectionRevisionRepository revisionRepository,
-        IServiceProvider services
+        IEnumerable<IReadModelUpdater> updaters,
+        IEnumerable<IReadModelUpdaterEventHandlerRegistration> updaterEventRegistrations
     )
     {
         _cfg = cfg;
         _logger = logger;
         _eventStore = eventStore;
         _revisionRepository = revisionRepository;
-        _services = services;
-        _eventTypeMap = new Dictionary<Type, IList<Type>>();
-        _aggregateUpdaterMap = new Dictionary<Type, Type>();
-
-        PopulateTypeMaps();
-    }
-
-    private void PopulateTypeMaps()
-    {
-        var types = typeof(SubscriptionHandler).Assembly.GetTypes();
-
-        var aggregateTypes = types
-            .Where(t => t.IsAssignableTo(typeof(IAggregate)) && t.IsAssignableTo(typeof(IEventHandler)))
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .Select(t => new
+        _eventTypeUpdaterMap = updaterEventRegistrations
+            .Select(r => new
             {
-                AggregateType = t,
-                EventHandlerInterfaces = t.GetInterfaces().Where(i => i.IsGenericType).Where(i => i.GetInterfaces().Contains(typeof(IEventHandler))).ToList(),
+                r.EventType,
+                ReadModelUpdater = updaters.Single(u => u.GetType() == r.ReadModelUpdaterType),
             })
-            .Select(t => new
-            {
-                t.AggregateType,
-                EventsHandled = t.EventHandlerInterfaces.Select(i => i.GetGenericArguments()[0]),
-            })
-            .SelectMany(t => t.EventsHandled.Select(e => new { EventType = e, t.AggregateType }))
-            .GroupBy(t => t.EventType)
-            .ToList();
-        foreach (var group in aggregateTypes)
-            _eventTypeMap[group.Key] = group.Select(t => t.AggregateType).ToList();
-
-        var updaterTypes = types
-            .Where(t => t.IsAssignableTo(typeof(IReadModelUpdater)))
-            .Where(t => t.IsClass && !t.IsAbstract)
-            .Select(t => new
-            {
-                UpdaterType = t,
-                UpdaterInterfaces = t.GetInterfaces().Where(i => i.IsGenericType).Where(i => i.GetInterfaces().Contains(typeof(IReadModelUpdater))).ToList(),
-            })
-            .Select(t => new
-            {
-                t.UpdaterType,
-                AggregateHandled = t.UpdaterInterfaces.Select(i => i.GetGenericArguments()[0]).Single(),
-            })
-            .ToList();
-        foreach (var t in updaterTypes)
-            _aggregateUpdaterMap[t.AggregateHandled] = t.UpdaterType;
+            .GroupBy(r => r.EventType)
+            .ToDictionary(k => k.Key, v => v.Select(r => r.ReadModelUpdater).ToArray());
     }
 
     private IReadModelUpdater[] GetUpdatersForEvent(ISerializableEvent @event)
-    {
-        var aggregateTypes = _eventTypeMap.TryGetValue(@event.GetType(), out var aggregateTypeList) ? aggregateTypeList.ToArray() : Array.Empty<Type>();
-        var updaterTypes = aggregateTypes.Select(t => _aggregateUpdaterMap.TryGetValue(t, out var updaterType) ? updaterType : null).Where(t => t is not null);
-
-        return updaterTypes
-            .Select(t => _services.GetRequiredService(t!) as IReadModelUpdater)
-            .Where(s => s is not null)
-            .Select(s => s!)
-            .ToArray();
-    }
+        => _eventTypeUpdaterMap.TryGetValue(@event.GetType(), out var updaters)
+            ? updaters
+            : Array.Empty<IReadModelUpdater>();
 
     public async Task SubscribeToAll(CancellationToken ct)
     {
@@ -160,12 +119,12 @@ public class SubscriptionHandler
 
 public class SubscriptionHandlerHostedService : IHostedService
 {
-    private readonly SubscriptionHandler _handler;
+    private readonly ISubscriptionHandler _handler;
 
     private Task? _handlerTask;
     private CancellationTokenSource? _handlerCancellationTokenSource;
 
-    public SubscriptionHandlerHostedService(SubscriptionHandler handler)
+    public SubscriptionHandlerHostedService(ISubscriptionHandler handler)
     {
         _handler = handler;
     }

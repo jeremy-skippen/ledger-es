@@ -75,21 +75,21 @@ public sealed class Ledger :
         switch (@event)
         {
             case LedgerOpened opened:
-                Handle(opened);
+                Apply(opened);
                 break;
             case ReceiptJournalled receipted:
-                Handle(receipted);
+                Apply(receipted);
                 break;
             case PaymentJournalled payment:
-                Handle(payment);
+                Apply(payment);
                 break;
             case LedgerClosed closed:
-                Handle(closed);
+                Apply(closed);
                 break;
         };
     }
 
-    public void Handle(LedgerOpened @event)
+    public void Apply(LedgerOpened @event)
     {
         if (IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot open a ledger that is already opened");
@@ -107,7 +107,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Handle(ReceiptJournalled @event)
+    public void Apply(ReceiptJournalled @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot receipt to a closed ledger");
@@ -118,7 +118,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Handle(PaymentJournalled @event)
+    public void Apply(PaymentJournalled @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot pay from a closed ledger");
@@ -131,7 +131,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Handle(LedgerClosed @event)
+    public void Apply(LedgerClosed @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot close a ledger that is not open");

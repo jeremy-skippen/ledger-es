@@ -66,6 +66,12 @@ if (isDevelopment)
     });
 }
 
+app.MapGet(
+    "/api/ledger",
+    async (int? page, int? pageSize, IMediator mediator, CancellationToken ct)
+        => await mediator.Send(new GetLedgerList(page, pageSize), ct)
+);
+
 app.MapPost(
     "/api/ledger",
     async (OpenLedger request, IMediator mediator, CancellationToken ct)

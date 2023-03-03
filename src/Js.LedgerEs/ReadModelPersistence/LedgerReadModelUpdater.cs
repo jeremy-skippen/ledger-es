@@ -13,7 +13,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
-public class LedgerReadModelUpdater : IReadModelUpdater<Ledger>
+public class LedgerReadModelUpdater : IReadModelUpdater
 {
     private const string INSERT_QUERY = @"
         INSERT INTO dbo.LedgerView(LedgerId, LedgerName, IsOpen, Entries, Balance, [Version], ModifiedDate)
