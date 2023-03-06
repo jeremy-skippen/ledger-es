@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 
 using EventStore.Client;
 
+using Js.LedgerEs.Configuration;
+
 namespace Js.LedgerEs.EventSourcing;
 
 public interface ISerializableEvent

@@ -5,12 +5,7 @@ using Js.LedgerEs.EventSourcing;
 
 namespace Js.LedgerEs;
 
-public sealed class Ledger :
-    IAggregate,
-    IEventHandler<LedgerOpened>,
-    IEventHandler<ReceiptJournalled>,
-    IEventHandler<PaymentJournalled>,
-    IEventHandler<LedgerClosed>
+public sealed class Ledger : IAggregate
 {
     public enum JournalType
     {
@@ -70,26 +65,26 @@ public sealed class Ledger :
         this.ModifiedDate = ModifiedDate;
     }
 
-    public void Apply(object? @event)
+    public void Apply(ISerializableEvent? @event)
     {
         switch (@event)
         {
             case LedgerOpened opened:
-                Apply(opened);
+                Open(opened);
                 break;
             case ReceiptJournalled receipted:
-                Apply(receipted);
+                JournalReceipt(receipted);
                 break;
             case PaymentJournalled payment:
-                Apply(payment);
+                JournalPayment(payment);
                 break;
             case LedgerClosed closed:
-                Apply(closed);
+                Close(closed);
                 break;
         };
     }
 
-    public void Apply(LedgerOpened @event)
+    public void Open(LedgerOpened @event)
     {
         if (IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot open a ledger that is already opened");
@@ -107,7 +102,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Apply(ReceiptJournalled @event)
+    public void JournalReceipt(ReceiptJournalled @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot receipt to a closed ledger");
@@ -118,7 +113,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Apply(PaymentJournalled @event)
+    public void JournalPayment(PaymentJournalled @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot pay from a closed ledger");
@@ -131,7 +126,7 @@ public sealed class Ledger :
         ModifiedDate = @event.EventDateTime;
     }
 
-    public void Apply(LedgerClosed @event)
+    public void Close(LedgerClosed @event)
     {
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot close a ledger that is not open");

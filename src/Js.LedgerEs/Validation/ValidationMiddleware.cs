@@ -1,6 +1,8 @@
-﻿using FluentValidation;
+﻿using System.Text.Json;
 
-using System.Text.Json;
+using FluentValidation;
+
+using Js.LedgerEs.Configuration;
 
 namespace Js.LedgerEs.Validation;
 

@@ -35,16 +35,7 @@ public interface IAggregate
     /// <param name="event">
     /// The event to apply.
     /// </param>
-    void Apply(object? @event);
-}
-
-public interface IEventHandler
-{
-}
-
-public interface IEventHandler<T> : IEventHandler where T : class, ISerializableEvent
-{
-    void Apply(T @event);
+    void Apply(ISerializableEvent? @event);
 }
 
 public static class AggregateStreamExtensions

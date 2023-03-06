@@ -67,6 +67,12 @@ if (isDevelopment)
 }
 
 app.MapGet(
+    "/api/dashboard",
+    async (IMediator mediator, CancellationToken ct)
+        => await mediator.Send(new GetDashboard(), ct)
+);
+
+app.MapGet(
     "/api/ledger",
     async (int? page, int? pageSize, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new GetLedgerList(page, pageSize), ct)

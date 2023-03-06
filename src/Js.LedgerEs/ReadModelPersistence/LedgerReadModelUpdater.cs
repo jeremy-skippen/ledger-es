@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using Dapper;
 
+using Js.LedgerEs.Configuration;
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Requests;
 
@@ -68,7 +69,7 @@ public class LedgerReadModelUpdater : IReadModelUpdater
                     ledger.LedgerId,
                     ledger.LedgerName,
                     ledger.IsOpen,
-                    Entries = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(ledger.Entries)),
+                    Entries = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(ledger.Entries, JsonConfig.SerializerOptions)),
                     ledger.Balance,
                     Version = (long)ledger.Version,
                     ledger.ModifiedDate,

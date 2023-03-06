@@ -19,3 +19,17 @@ CREATE TABLE dbo.LedgerView(
 );
 
 CREATE UNIQUE NONCLUSTERED INDEX IX_LedgerView_LedgerId ON dbo.LedgerView(LedgerId);
+
+CREATE TABLE dbo.DashboardView(
+    LedgerCount INT NOT NULL,
+    LedgerOpenCount INT NOT NULL,
+    LedgerClosedCount INT NOT NULL,
+    TransactionCount INT NOT NULL,
+    ReceiptCount INT NOT NULL,
+    PaymentCount INT NOT NULL,
+    NetAmount DECIMAL(18, 2) NOT NULL,
+    ReceiptAmount DECIMAL(18, 2) NOT NULL,
+    PaymentAmount DECIMAL(18, 2) NOT NULL,
+    [Version] BIGINT NOT NULL,
+    ModifiedDate DATETIMEOFFSET NOT NULL
+);

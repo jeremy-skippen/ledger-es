@@ -51,31 +51,6 @@ services:
       - ./volumes/mssql/data:/var/opt/mssql/data
       - ./volumes/mssql/log:/var/opt/mssql/log
       - ./volumes/mssql/secrets:/var/opt/mssql/secrets
-  rabbitmq:
-    image: rabbitmq:3.11-management
-    hostname: msgbus.ledger-es.local
-    environment:
-      RABBITMQ_DEFAULT_USER: "user"
-      RABBITMQ_DEFAULT_PASS: "password"
-      RABBITMQ_SECURE_PASSWORD: "no"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:15672" ]
-      interval: 2s
-      timeout: 5s
-      retries: 20
-      start_period: 7s
-    ports:
-      - 1883:1883
-      - 5672:5672
-      - 15672:15672
-      - 8082:15672
-    networks:
-      ledger-es-default:
-        ipv4_address: 192.168.1.4
-    volumes:
-      - ./volumes/rabbitmq/etc/enabled_plugins:/etc/rabbitmq/enabled_plugins
-      - ./volumes/rabbitmq/etc/20_ledger-es.conf:/etc/rabbitmq/conf.d/20_ledger-es.conf
-      - ./volumes/rabbitmq/data:/var/lib/rabbitmq
 
 networks:
   ledger-es-default:

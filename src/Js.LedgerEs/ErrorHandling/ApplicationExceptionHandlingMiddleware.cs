@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
 
-using System.Text.Json;
+using Js.LedgerEs.Configuration;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace Js.LedgerEs.ErrorHandling;
 

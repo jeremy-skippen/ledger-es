@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.Configuration;
 
 public static class JsonConfig
 {

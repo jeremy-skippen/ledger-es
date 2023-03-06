@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
 
+using Js.LedgerEs.Configuration;
+
 using MediatR;
 
 namespace Js.LedgerEs.Requests;
