@@ -1,11 +1,10 @@
-﻿using EventStore.Client;
+﻿using System.Transactions;
 
-using Js.LedgerEs.Configuration;
+using EventStore.Client;
+
 using Js.LedgerEs.EventSourcing;
 
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using MediatR;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
@@ -16,49 +15,31 @@ public interface ISubscriptionHandler
 
 public class SubscriptionHandler : ISubscriptionHandler
 {
-    private readonly IOptions<LedgerEsConfiguration> _cfg;
     private readonly ILogger<SubscriptionHandler> _logger;
+    private readonly IMediator _mediator;
     private readonly EventStoreClient _eventStore;
     private readonly IProjectionRevisionRepository _revisionRepository;
-    private readonly IDictionary<Type, IReadModelUpdater[]> _eventTypeUpdaterMap;
 
     private const string PROJECTION_NAME = "default";
 
     public SubscriptionHandler(
-        IOptions<LedgerEsConfiguration> cfg,
         ILogger<SubscriptionHandler> logger,
+        IMediator mediator,
         EventStoreClient eventStore,
-        IProjectionRevisionRepository revisionRepository,
-        IEnumerable<IReadModelUpdater> updaters,
-        IEnumerable<IReadModelUpdaterEventHandlerRegistration> updaterEventRegistrations
+        IProjectionRevisionRepository revisionRepository
     )
     {
-        _cfg = cfg;
         _logger = logger;
+        _mediator = mediator;
         _eventStore = eventStore;
         _revisionRepository = revisionRepository;
-        _eventTypeUpdaterMap = updaterEventRegistrations
-            .Select(r => new
-            {
-                r.EventType,
-                ReadModelUpdater = updaters.Single(u => u.GetType() == r.ReadModelUpdaterType),
-            })
-            .GroupBy(r => r.EventType)
-            .ToDictionary(k => k.Key, v => v.Select(r => r.ReadModelUpdater).ToArray());
     }
-
-    private IReadModelUpdater[] GetUpdatersForEvent(ISerializableEvent @event)
-        => _eventTypeUpdaterMap.TryGetValue(@event.GetType(), out var updaters)
-            ? updaters
-            : Array.Empty<IReadModelUpdater>();
 
     public async Task SubscribeToAll(CancellationToken ct)
     {
         _logger.LogInformation("Subscribing to $all stream");
 
-        using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
-
-        var position = await _revisionRepository.GetStreamPosition(conn, PROJECTION_NAME);
+        var position = await _revisionRepository.GetStreamPosition(PROJECTION_NAME);
 
         await _eventStore.SubscribeToAllAsync(
             position.HasValue ? FromAll.After(position.Value) : FromAll.Start,
@@ -74,34 +55,19 @@ public class SubscriptionHandler : ISubscriptionHandler
     {
         try
         {
-            using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
-            await conn.OpenAsync(ct);
+            using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled);
 
-            using var transaction = conn.BeginTransaction();
-
-            try
+            var @event = resolvedEvent.DeserializeFromResolvedEvent();
+            if (@event is not null)
             {
-                var @event = resolvedEvent.DeserializeFromResolvedEvent();
-                if (@event is not null)
-                {
-                    _logger.LogInformation("Persisting changes to read model from event {Event}", @event);
+                _logger.LogInformation("Persisting changes to read model from event {Event}", @event);
 
-                    var updaters = GetUpdatersForEvent(@event);
-                    foreach (var updater in updaters)
-                    {
-                        var readModel = await updater.ApplyEventToReadModel(conn, transaction, @event, ct);
-                    }
-                }
-
-                await _revisionRepository.SetStreamPosition(conn, transaction, PROJECTION_NAME, resolvedEvent.Event.Position);
-                await transaction.CommitAsync(ct);
+                await _mediator.Publish(new UpdateReadModel(@event), ct);
             }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync(ct);
 
-                throw;
-            }
+            await _revisionRepository.SetStreamPosition(PROJECTION_NAME, resolvedEvent.Event.Position);
+
+            transaction.Complete();
         }
         catch (Exception ex)
         {

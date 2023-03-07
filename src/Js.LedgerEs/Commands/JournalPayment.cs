@@ -41,7 +41,7 @@ public sealed class JournalPaymentValidator : AbstractValidator<JournalPayment>
     }
 }
 
-public sealed class JournalPaymentHandler : AbstractCommandHandler<JournalPayment, PaymentJournalled, Ledger>
+public sealed class JournalPaymentHandler : AbstractCommandHandler<JournalPayment, PaymentJournalled, LedgerWriteModel>
 {
     public JournalPaymentHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {

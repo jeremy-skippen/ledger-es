@@ -32,7 +32,7 @@ public sealed class OpenLedgerValidator : AbstractValidator<OpenLedger>
     }
 }
 
-public sealed class OpenLedgerHandler : AbstractCommandHandler<OpenLedger, LedgerOpened, Ledger>
+public sealed class OpenLedgerHandler : AbstractCommandHandler<OpenLedger, LedgerOpened, LedgerWriteModel>
 {
     public OpenLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {

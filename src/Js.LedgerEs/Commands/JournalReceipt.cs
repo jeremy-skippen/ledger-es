@@ -41,7 +41,7 @@ public sealed class JournalReceiptValidator : AbstractValidator<JournalReceipt>
     }
 }
 
-public sealed class JournalReceiptHandler : AbstractCommandHandler<JournalReceipt, ReceiptJournalled, Ledger>
+public sealed class JournalReceiptHandler : AbstractCommandHandler<JournalReceipt, ReceiptJournalled, LedgerWriteModel>
 {
     public JournalReceiptHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {

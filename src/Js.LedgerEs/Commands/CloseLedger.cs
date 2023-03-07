@@ -27,7 +27,7 @@ public sealed class CloseLedgerValidator : AbstractValidator<CloseLedger>
     }
 }
 
-public sealed class CloseLedgerHandler : AbstractCommandHandler<CloseLedger, LedgerClosed, Ledger>
+public sealed class CloseLedgerHandler : AbstractCommandHandler<CloseLedger, LedgerClosed, LedgerWriteModel>
 {
     public CloseLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
     {

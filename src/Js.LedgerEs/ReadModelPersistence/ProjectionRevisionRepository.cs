@@ -1,22 +1,25 @@
-﻿using System.Data;
-
-using Dapper;
+﻿using Dapper;
 
 using EventStore.Client;
 
+using Js.LedgerEs.Configuration;
+
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
 public interface IProjectionRevisionRepository
 {
-    Task<Position?> GetStreamPosition(SqlConnection conn, string projectionName);
+    Task<Position?> GetStreamPosition(string projectionName);
 
-    Task SetStreamPosition(SqlConnection conn, IDbTransaction transaction, string projectionName, Position position);
+    Task SetStreamPosition(string projectionName, Position position);
 }
 
 public class ProjectionRevisionRepository : IProjectionRevisionRepository
 {
+    private readonly IOptions<LedgerEsConfiguration> _cfg;
+
     private const string GET_QUERY = @"
         SELECT StreamPosition
         FROM dbo.ProjectionPosition
@@ -34,12 +37,15 @@ public class ProjectionRevisionRepository : IProjectionRevisionRepository
         END
     ";
 
-    public ProjectionRevisionRepository()
+    public ProjectionRevisionRepository(IOptions<LedgerEsConfiguration> cfg)
     {
+        _cfg = cfg;
     }
 
-    public async Task<Position?> GetStreamPosition(SqlConnection conn, string projectionName)
+    public async Task<Position?> GetStreamPosition(string projectionName)
     {
+        using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
+
         var rawPosition = await conn.ExecuteScalarAsync<ulong>(GET_QUERY, new { projectionName });
         if (rawPosition == 0)
             return null;
@@ -47,8 +53,10 @@ public class ProjectionRevisionRepository : IProjectionRevisionRepository
         return new Position(rawPosition, rawPosition);
     }
 
-    public async Task SetStreamPosition(SqlConnection conn, IDbTransaction transaction, string projectionName, Position position)
+    public async Task SetStreamPosition(string projectionName, Position position)
     {
-        await conn.ExecuteAsync(SET_QUERY, new { projectionName, streamPosition = (long)position.CommitPosition }, transaction);
+        using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
+
+        await conn.ExecuteAsync(SET_QUERY, new { projectionName, streamPosition = (long)position.CommitPosition });
     }
 }

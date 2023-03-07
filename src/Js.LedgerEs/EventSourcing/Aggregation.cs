@@ -38,6 +38,10 @@ public interface IAggregate
     void Apply(ISerializableEvent? @event);
 }
 
+public interface IWriteModel : IAggregate
+{
+}
+
 public static class AggregateStreamExtensions
 {
     public static async Task<T?> AggregateStream<T>(

@@ -21,16 +21,16 @@ public sealed class GetLedgerRequestHandler : IRequestHandler<GetLedger, GetLedg
 
     public async Task<GetLedgerResponse> Handle(GetLedger request, CancellationToken cancellationToken)
     {
-        Ledger? ledger = null;
+        LedgerReadModel? ledger = null;
 
         var jsonResponse = await _mediator.Send(new GetLedgerRawJson(request.LedgerId), cancellationToken);
         if (jsonResponse.Ledger is not null)
         {
-            ledger = JsonSerializer.Deserialize<Ledger>(jsonResponse.Ledger, JsonConfig.SerializerOptions);
+            ledger = JsonSerializer.Deserialize<LedgerReadModel>(jsonResponse.Ledger, JsonConfig.SerializerOptions);
         }
 
         return new GetLedgerResponse(ledger);
     }
 }
 
-public sealed record GetLedgerResponse(Ledger? Ledger);
+public sealed record GetLedgerResponse(LedgerReadModel? Ledger);

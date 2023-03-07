@@ -20,7 +20,7 @@ public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
     IRequestHandler<TRequest, TResponse>
         where TRequest : class, ICommand, IRequest<TResponse>
         where TResponse : class, ISerializableEvent
-        where TAggregate : class, IAggregate, new()
+        where TAggregate : class, IWriteModel, new()
 {
     protected IMapper Mapper { get; private set; }
     protected EventStoreClient EventStore { get; private set; }

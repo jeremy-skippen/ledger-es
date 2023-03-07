@@ -1,17 +1,16 @@
-﻿using System.Data;
+﻿using Dapper;
 
-using Dapper;
-
-using Js.LedgerEs.EventSourcing;
+using Js.LedgerEs.Configuration;
 using Js.LedgerEs.Requests;
 
 using MediatR;
 
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
-public class DashboardReadModelUpdater : IReadModelUpdater
+public sealed class UpdateDashboardReadModelHandler : INotificationHandler<UpdateReadModel>
 {
     private const string QUERY = @"
         UPDATE TOP (1) dbo.DashboardView WITH (UPDLOCK, SERIALIZABLE)
@@ -45,26 +44,34 @@ public class DashboardReadModelUpdater : IReadModelUpdater
         END
     ";
 
-    private readonly ILogger<DashboardReadModelUpdater> _logger;
+    private readonly IOptions<LedgerEsConfiguration> _cfg;
+    private readonly ILogger<UpdateDashboardReadModelHandler> _logger;
     private readonly IMediator _mediator;
 
-    public DashboardReadModelUpdater(
-        ILogger<DashboardReadModelUpdater> logger,
+    public UpdateDashboardReadModelHandler(
+        IOptions<LedgerEsConfiguration> cfg,
+        ILogger<UpdateDashboardReadModelHandler> logger,
         IMediator mediator
     )
     {
+        _cfg = cfg;
         _logger = logger;
         _mediator = mediator;
     }
 
-    public async Task<IAggregate?> ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken)
+    public async Task Handle(UpdateReadModel request, CancellationToken cancellationToken)
     {
         var dashboard = await _mediator.Send(new GetDashboard(), cancellationToken);
+        var beforeVersion = dashboard.Version;
 
-        dashboard.Apply(@event);
+        dashboard.Apply(request.Event);
+
+        if (beforeVersion == dashboard.Version)
+            return;
 
         try
         {
+            using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
             var rowsAffected = await conn.ExecuteAsync(
                 QUERY,
                 new
@@ -80,8 +87,7 @@ public class DashboardReadModelUpdater : IReadModelUpdater
                     dashboard.PaymentAmount,
                     Version = (long)dashboard.Version,
                     dashboard.ModifiedDate,
-                },
-                transaction
+                }
             );
             if (rowsAffected != 1)
                 _logger.LogWarning("{RowsUpdated} rows affected writing read model, expected 1", rowsAffected);
@@ -89,9 +95,9 @@ public class DashboardReadModelUpdater : IReadModelUpdater
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to write read model - read model will be out of date: {Message}", ex.Message);
-            return null;
+            return;
         }
 
-        return dashboard;
+        await _mediator.Publish(new NotifyReadModelUpdated<DashboardReadModel>(dashboard), cancellationToken);
     }
 }
