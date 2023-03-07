@@ -49,7 +49,7 @@ public static class AggregateStreamExtensions
         string streamId,
         CancellationToken cancellationToken,
         ulong? fromVersion = null
-    ) where T : class, IAggregate, new()
+    ) where T : class, IWriteModel, new()
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,

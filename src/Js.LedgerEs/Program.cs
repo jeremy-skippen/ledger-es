@@ -5,6 +5,7 @@ using Js.LedgerEs.Commands;
 using Js.LedgerEs.Configuration;
 using Js.LedgerEs.ErrorHandling;
 using Js.LedgerEs.EventSourcing;
+using Js.LedgerEs.Notification;
 using Js.LedgerEs.ReadModelPersistence;
 using Js.LedgerEs.Requests;
 using Js.LedgerEs.Validation;
@@ -56,6 +57,8 @@ builder.Services
         });
     })
     ;
+
+builder.Services.AddSignalR();
 
 builder.Logging
     .ClearProviders()
@@ -125,5 +128,11 @@ api.MapDelete(
     async (Guid ledgerId, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new CloseLedger(ledgerId), ct)
 );
+
+var signalr = app
+    .MapGroup("/signalr")
+    .RequireCors(CORS_POLICY_NAME);
+
+signalr.MapHub<DashboardNotificationHub>("/dashboard");
 
 app.Run();

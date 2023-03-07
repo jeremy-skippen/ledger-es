@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import * as signalR from "@microsoft/signalr";
+import { useEffect, useMemo, useState } from "react";
 import DashboardDisplay from "./DashboardDisplay";
 import { Dashboard, getDashboard } from "./dashboard";
 import LedgerDetailDisplay from "./LedgerDetailDisplay";
@@ -11,6 +12,18 @@ export default function App() {
 
   useEffect(() => {
     getDashboard().then((d) => setDashboard(d));
+  }, []);
+
+  const connection = useMemo(() => {
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl("http://localhost:8082/signalr/dashboard", { withCredentials: false })
+      .build();
+
+    conn.on("DashboardUpdated", (dashboard: Dashboard) => setDashboard(dashboard));
+
+    conn.start();
+
+    return conn;
   }, []);
 
   return (
