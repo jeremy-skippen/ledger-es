@@ -44,7 +44,7 @@ public class LedgerReadModelUpdater : IReadModelUpdater
         _mediator = mediator;
     }
 
-    public async Task ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken)
+    public async Task<IAggregate?> ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken)
     {
         var ledgerId = @event.GetStreamUniqueIdentifier();
         var ledgerResponse = await _mediator.Send(new GetLedger(ledgerId), cancellationToken);
@@ -57,6 +57,7 @@ public class LedgerReadModelUpdater : IReadModelUpdater
         catch (InvalidStateTransitionException ex)
         {
             _logger.LogError(ex, "Failed to apply event to existing read model - read model will be out of date: {Message}", ex.Message);
+            return null;
         }
 
         try
@@ -82,6 +83,9 @@ public class LedgerReadModelUpdater : IReadModelUpdater
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to write read model - read model will be out of date: {Message}", ex.Message);
+            return null;
         }
+
+        return ledger;
     }
 }

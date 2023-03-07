@@ -88,7 +88,9 @@ public class SubscriptionHandler : ISubscriptionHandler
 
                     var updaters = GetUpdatersForEvent(@event);
                     foreach (var updater in updaters)
-                        await updater.ApplyEventToReadModel(conn, transaction, @event, ct);
+                    {
+                        var readModel = await updater.ApplyEventToReadModel(conn, transaction, @event, ct);
+                    }
                 }
 
                 await _revisionRepository.SetStreamPosition(conn, transaction, PROJECTION_NAME, resolvedEvent.Event.Position);

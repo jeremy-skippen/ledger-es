@@ -13,6 +13,8 @@ using MediatR;
 
 using Microsoft.OpenApi.Models;
 
+const string CORS_POLICY_NAME = "DevPolicy";
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
@@ -33,7 +35,16 @@ builder.Services
     })
     .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(builder.Configuration.GetConnectionString("EventStore"))))
     .AddReadModelPersistence()
-    .AddCors()
+    .AddCors(opt =>
+    {
+        opt.AddPolicy(CORS_POLICY_NAME, builder =>
+        {
+            builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+    })
     .AddProblemDetails()
     .AddEndpointsApiExplorer()
     .AddSwaggerGen(c =>
@@ -56,12 +67,7 @@ app
     .UseEventSerialization()
     .UseErrorHandling()
     .UseValidation()
-    .UseCors(p =>
-    {
-        p.AllowAnyOrigin();
-        p.AllowAnyMethod();
-        p.AllowAnyHeader();
-    })
+    .UseCors()
     .UseSwagger()
     .UseSwaggerUI(c =>
     {
@@ -69,26 +75,30 @@ app
         c.RoutePrefix = "";
     });
 
-app.MapGet(
-    "/api/dashboard",
+var api = app
+    .MapGroup("/api")
+    .RequireCors(CORS_POLICY_NAME);
+
+api.MapGet(
+    "/dashboard",
     async (IMediator mediator, CancellationToken ct)
         => await mediator.Send(new GetDashboard(), ct)
 );
 
-app.MapGet(
-    "/api/ledger",
+api.MapGet(
+    "/ledger",
     async (int? page, int? pageSize, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new GetLedgerList(page, pageSize), ct)
 );
 
-app.MapPost(
-    "/api/ledger",
+api.MapPost(
+    "/ledger",
     async (OpenLedger request, IMediator mediator, CancellationToken ct)
         => await mediator.Send(request, ct)
 );
 
-app.MapGet(
-    "/api/ledger/{ledgerId:guid}",
+api.MapGet(
+    "/ledger/{ledgerId:guid}",
     async (Guid ledgerId, IMediator mediator, CancellationToken ct) =>
     {
         var response = await mediator.Send(new GetLedgerRawJson(ledgerId), ct);
@@ -98,20 +108,20 @@ app.MapGet(
     }
 );
 
-app.MapPost(
-    "/api/ledger/{ledgerId:guid}/receipt",
+api.MapPost(
+    "/ledger/{ledgerId:guid}/receipt",
     async (Guid ledgerId, JournalReceiptRequestBody request, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new JournalReceipt(ledgerId, request.Description, request.Amount), ct)
 );
 
-app.MapPost(
-    "/api/ledger/{ledgerId:guid}/payment",
+api.MapPost(
+    "/ledger/{ledgerId:guid}/payment",
     async (Guid ledgerId, JournalPaymentRequestBody request, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new JournalPayment(ledgerId, request.Description, request.Amount), ct)
 );
 
-app.MapDelete(
-    "/api/ledger/{ledgerId:guid}",
+api.MapDelete(
+    "/ledger/{ledgerId:guid}",
     async (Guid ledgerId, IMediator mediator, CancellationToken ct)
         => await mediator.Send(new CloseLedger(ledgerId), ct)
 );

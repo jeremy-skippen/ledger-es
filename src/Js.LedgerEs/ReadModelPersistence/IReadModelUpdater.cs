@@ -8,7 +8,7 @@ namespace Js.LedgerEs.ReadModelPersistence;
 
 public interface IReadModelUpdater
 {
-    Task ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken);
+    Task<IAggregate?> ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken);
 }
 
 public interface IReadModelUpdaterEventHandlerRegistration
