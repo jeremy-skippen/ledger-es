@@ -32,7 +32,7 @@ export default function LedgerDetailDisplay({
             <button className="close" type="button" onClick={onClose}>
               &times;
             </button>
-            <h2>{ledger.ledgerName}</h2>
+            <h2>{ledger.ledgerName} - {currencyFormat.format(ledger.balance)}</h2>
           </ModalHeader>
           <ModalBody>
             {entries.length > 0 ? (

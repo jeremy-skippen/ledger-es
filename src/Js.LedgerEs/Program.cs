@@ -1,21 +1,19 @@
 using EventStore.Client;
 
 using Js.LedgerEs;
-using Js.LedgerEs.Commands;
 using Js.LedgerEs.Configuration;
+using Js.LedgerEs.Dashboard;
 using Js.LedgerEs.ErrorHandling;
 using Js.LedgerEs.EventSourcing;
-using Js.LedgerEs.Notification;
+using Js.LedgerEs.Ledgers;
 using Js.LedgerEs.ReadModelPersistence;
-using Js.LedgerEs.Requests;
 using Js.LedgerEs.Validation;
-
-using MediatR;
 
 using Microsoft.OpenApi.Models;
 
 const string CORS_POLICY_NAME = "DevPolicy";
 
+var assembly = typeof(Program).Assembly;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
@@ -32,9 +30,10 @@ builder.Services
     .AddMediatR(cfg =>
     {
         cfg.AddValidationBehavior();
-        cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+        cfg.RegisterServicesFromAssembly(assembly);
     })
     .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(builder.Configuration.GetConnectionString("EventStore"))))
+    .AddEventSerialization(assembly)
     .AddReadModelPersistence()
     .AddCors(opt =>
     {
@@ -67,10 +66,9 @@ builder.Logging
 var app = builder.Build();
 
 app
-    .UseEventSerialization()
     .UseErrorHandling()
     .UseValidation()
-    .UseCors()
+    .UseCors(CORS_POLICY_NAME)
     .UseSwagger()
     .UseSwaggerUI(c =>
     {
@@ -78,61 +76,12 @@ app
         c.RoutePrefix = "";
     });
 
-var api = app
-    .MapGroup("/api")
-    .RequireCors(CORS_POLICY_NAME);
+var api = app.MapGroup("/api");
+api.MapDashboardRoutes();
+api.MapLedgerRoutes();
 
-api.MapGet(
-    "/dashboard",
-    async (IMediator mediator, CancellationToken ct)
-        => await mediator.Send(new GetDashboard(), ct)
-);
-
-api.MapGet(
-    "/ledger",
-    async (int? page, int? pageSize, IMediator mediator, CancellationToken ct)
-        => await mediator.Send(new GetLedgerList(page, pageSize), ct)
-);
-
-api.MapPost(
-    "/ledger",
-    async (OpenLedger request, IMediator mediator, CancellationToken ct)
-        => await mediator.Send(request, ct)
-);
-
-api.MapGet(
-    "/ledger/{ledgerId:guid}",
-    async (Guid ledgerId, IMediator mediator, CancellationToken ct) =>
-    {
-        var response = await mediator.Send(new GetLedgerRawJson(ledgerId), ct);
-        return response.Ledger is null
-            ? Results.NotFound()
-            : Results.Text(response.Ledger, "application/json");
-    }
-);
-
-api.MapPost(
-    "/ledger/{ledgerId:guid}/receipt",
-    async (Guid ledgerId, JournalReceiptRequestBody request, IMediator mediator, CancellationToken ct)
-        => await mediator.Send(new JournalReceipt(ledgerId, request.Description, request.Amount), ct)
-);
-
-api.MapPost(
-    "/ledger/{ledgerId:guid}/payment",
-    async (Guid ledgerId, JournalPaymentRequestBody request, IMediator mediator, CancellationToken ct)
-        => await mediator.Send(new JournalPayment(ledgerId, request.Description, request.Amount), ct)
-);
-
-api.MapDelete(
-    "/ledger/{ledgerId:guid}",
-    async (Guid ledgerId, IMediator mediator, CancellationToken ct)
-        => await mediator.Send(new CloseLedger(ledgerId), ct)
-);
-
-var signalr = app
-    .MapGroup("/signalr")
-    .RequireCors(CORS_POLICY_NAME);
-
-signalr.MapHub<DashboardNotificationHub>("/dashboard");
+var signalr = app.MapGroup("/signalr");
+signalr.MapDashboardHubs();
+signalr.MapLedgerHubs();
 
 app.Run();

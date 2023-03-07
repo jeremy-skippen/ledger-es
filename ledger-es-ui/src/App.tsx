@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardDisplay from "./DashboardDisplay";
 import { Dashboard, getDashboard } from "./dashboard";
 import LedgerDetailDisplay from "./LedgerDetailDisplay";
@@ -14,7 +14,7 @@ export default function App() {
     getDashboard().then((d) => setDashboard(d));
   }, []);
 
-  const connection = useMemo(() => {
+  useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
       .withUrl("http://localhost:8082/signalr/dashboard", { withCredentials: false })
       .build();
@@ -23,7 +23,9 @@ export default function App() {
 
     conn.start();
 
-    return conn;
+    return () => {
+      conn.stop();
+    };
   }, []);
 
   return (

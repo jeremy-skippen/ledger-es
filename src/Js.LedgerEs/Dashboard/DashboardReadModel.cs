@@ -1,10 +1,10 @@
 ﻿using System.Text.Json.Serialization;
 
-using Js.LedgerEs.Commands;
 using Js.LedgerEs.EventSourcing;
+using Js.LedgerEs.Ledgers;
 using Js.LedgerEs.ReadModelPersistence;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.Dashboard;
 
 public sealed class DashboardReadModel : IReadModel
 {
@@ -37,7 +37,7 @@ public sealed class DashboardReadModel : IReadModel
         ReceiptAmount = 0;
         PaymentAmount = 0;
 
-        Version = ulong.MaxValue;
+        Version = 0;
         ModifiedDate = DateTimeOffset.MinValue;
     }
 

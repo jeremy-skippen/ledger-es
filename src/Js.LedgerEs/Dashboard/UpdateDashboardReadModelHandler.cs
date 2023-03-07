@@ -1,14 +1,14 @@
 ﻿using Dapper;
 
 using Js.LedgerEs.Configuration;
-using Js.LedgerEs.Requests;
+using Js.LedgerEs.ReadModelPersistence;
 
 using MediatR;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace Js.LedgerEs.ReadModelPersistence;
+namespace Js.LedgerEs.Dashboard;
 
 public sealed class UpdateDashboardReadModelHandler : INotificationHandler<UpdateReadModel>
 {

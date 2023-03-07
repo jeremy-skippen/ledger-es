@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 
-using EventStore.Client;
-
 using FluentValidation;
 
 using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.Commands;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record CloseLedger(
     Guid LedgerId
@@ -29,7 +27,7 @@ public sealed class CloseLedgerValidator : AbstractValidator<CloseLedger>
 
 public sealed class CloseLedgerHandler : AbstractCommandHandler<CloseLedger, LedgerClosed, LedgerWriteModel>
 {
-    public CloseLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
+    public CloseLedgerHandler(IMapper mapper, IEventClient eventClient) : base(mapper, eventClient)
     {
     }
 }

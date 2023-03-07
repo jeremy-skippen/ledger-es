@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 
-using EventStore.Client;
-
 using FluentValidation;
 
 using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.Commands;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record JournalPaymentRequestBody(
     string Description,
@@ -43,7 +41,7 @@ public sealed class JournalPaymentValidator : AbstractValidator<JournalPayment>
 
 public sealed class JournalPaymentHandler : AbstractCommandHandler<JournalPayment, PaymentJournalled, LedgerWriteModel>
 {
-    public JournalPaymentHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
+    public JournalPaymentHandler(IMapper mapper, IEventClient eventClient) : base(mapper, eventClient)
     {
     }
 }

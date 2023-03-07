@@ -4,14 +4,14 @@ using System.Text.Json;
 using Dapper;
 
 using Js.LedgerEs.Configuration;
-using Js.LedgerEs.Requests;
+using Js.LedgerEs.ReadModelPersistence;
 
 using MediatR;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace Js.LedgerEs.ReadModelPersistence;
+namespace Js.LedgerEs.Ledgers;
 
 public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel>
 {
@@ -69,7 +69,7 @@ public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel
         try
         {
             using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
-            var query = ledger.Version == 0 ? INSERT_QUERY : UPDATE_QUERY;
+            var query = beforeVersion == 0 ? INSERT_QUERY : UPDATE_QUERY;
             var rowsAffected = await conn.ExecuteAsync(
                 query,
                 new

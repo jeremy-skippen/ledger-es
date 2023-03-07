@@ -9,7 +9,7 @@ using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.Commands;
+namespace Js.LedgerEs;
 
 public interface ICommand
 {
@@ -23,19 +23,19 @@ public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
         where TAggregate : class, IWriteModel, new()
 {
     protected IMapper Mapper { get; private set; }
-    protected EventStoreClient EventStore { get; private set; }
+    protected IEventClient EventClient { get; private set; }
 
-    public AbstractCommandHandler(IMapper mapper, EventStoreClient eventStore)
+    public AbstractCommandHandler(IMapper mapper, IEventClient eventClient)
     {
         Mapper = mapper;
-        EventStore = eventStore;
+        EventClient = eventClient;
     }
 
     public virtual async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
     {
         var streamId = request.GetStreamUniqueIdentifier();
-        var streamName = streamId.GetStreamNameForAggregate<TAggregate>();
-        var aggregate = await EventStore.AggregateStream<TAggregate>(streamName, cancellationToken) ?? new TAggregate();
+        var streamName = EventClient.GetStreamNameForAggregate<TAggregate>(streamId);
+        var aggregate = await EventClient.AggregateStream<TAggregate>(streamName, cancellationToken) ?? new TAggregate();
         var beforeVersion = aggregate.Version;
         var @event = MapRequestToEvent(request);
 
@@ -48,23 +48,15 @@ public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
             throw new ValidationException(ex.Message, new[] { new ValidationFailure(ex.EventProperty ?? "", ex.Message) });
         }
 
-        var eventData = @event.SerializeToEventData();
-
-        try
-        {
-            await EventStore.AppendToStreamAsync(
-                streamName,
-                beforeVersion == ulong.MaxValue
-                    ? StreamRevision.None
-                    : beforeVersion,
-                new[] { eventData },
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (WrongExpectedVersionException ex)
-        {
-            throw new EventStoreConcurrencyException(aggregate, ex.Message);
-        }
+        await EventClient.AppendToStreamAsync(
+            streamName,
+            aggregate,
+            beforeVersion == 0
+                ? StreamRevision.None
+                : beforeVersion - 1,
+            @event,
+            cancellationToken
+        );
 
         return @event;
     }

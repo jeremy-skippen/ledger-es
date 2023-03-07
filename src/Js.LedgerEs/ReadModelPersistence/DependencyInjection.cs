@@ -1,7 +1,4 @@
-﻿using Js.LedgerEs.Commands;
-using Js.LedgerEs.EventSourcing;
-
-namespace Js.LedgerEs.ReadModelPersistence;
+﻿namespace Js.LedgerEs.ReadModelPersistence;
 
 public static class ReadModelPersistenceDependencyInjection
 {

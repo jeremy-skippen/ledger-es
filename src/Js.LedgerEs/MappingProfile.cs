@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 
-using Js.LedgerEs.Commands;
+using Js.LedgerEs.Ledgers;
 
 namespace Js.LedgerEs;
 

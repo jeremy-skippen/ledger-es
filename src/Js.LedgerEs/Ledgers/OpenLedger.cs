@@ -1,14 +1,12 @@
 using AutoMapper;
 
-using EventStore.Client;
-
 using FluentValidation;
 
 using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.Commands;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record OpenLedger(
     Guid LedgerId,
@@ -34,7 +32,7 @@ public sealed class OpenLedgerValidator : AbstractValidator<OpenLedger>
 
 public sealed class OpenLedgerHandler : AbstractCommandHandler<OpenLedger, LedgerOpened, LedgerWriteModel>
 {
-    public OpenLedgerHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
+    public OpenLedgerHandler(IMapper mapper, IEventClient eventClient) : base(mapper, eventClient)
     {
     }
 }

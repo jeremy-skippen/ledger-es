@@ -17,7 +17,7 @@ public class SubscriptionHandler : ISubscriptionHandler
 {
     private readonly ILogger<SubscriptionHandler> _logger;
     private readonly IMediator _mediator;
-    private readonly EventStoreClient _eventStore;
+    private readonly IEventClient _eventClient;
     private readonly IProjectionRevisionRepository _revisionRepository;
 
     private const string PROJECTION_NAME = "default";
@@ -25,13 +25,13 @@ public class SubscriptionHandler : ISubscriptionHandler
     public SubscriptionHandler(
         ILogger<SubscriptionHandler> logger,
         IMediator mediator,
-        EventStoreClient eventStore,
+        IEventClient eventClient,
         IProjectionRevisionRepository revisionRepository
     )
     {
         _logger = logger;
         _mediator = mediator;
-        _eventStore = eventStore;
+        _eventClient = eventClient;
         _revisionRepository = revisionRepository;
     }
 
@@ -41,7 +41,7 @@ public class SubscriptionHandler : ISubscriptionHandler
 
         var position = await _revisionRepository.GetStreamPosition(PROJECTION_NAME);
 
-        await _eventStore.SubscribeToAllAsync(
+        await _eventClient.SubscribeToAllAsync(
             position.HasValue ? FromAll.After(position.Value) : FromAll.Start,
             eventAppeared: HandleEvent,
             subscriptionDropped: HandleDrop,
@@ -57,7 +57,7 @@ public class SubscriptionHandler : ISubscriptionHandler
         {
             using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled);
 
-            var @event = resolvedEvent.DeserializeFromResolvedEvent();
+            var @event = _eventClient.DeserializeFromResolvedEvent(resolvedEvent);
             if (@event is not null)
             {
                 _logger.LogInformation("Persisting changes to read model from event {Event}", @event);

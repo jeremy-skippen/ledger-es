@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 
-using EventStore.Client;
-
 using FluentValidation;
 
 using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.Commands;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record JournalReceiptRequestBody(
     string Description,
@@ -43,7 +41,7 @@ public sealed class JournalReceiptValidator : AbstractValidator<JournalReceipt>
 
 public sealed class JournalReceiptHandler : AbstractCommandHandler<JournalReceipt, ReceiptJournalled, LedgerWriteModel>
 {
-    public JournalReceiptHandler(IMapper mapper, EventStoreClient eventStore) : base(mapper, eventStore)
+    public JournalReceiptHandler(IMapper mapper, IEventClient eventClient) : base(mapper, eventClient)
     {
     }
 }

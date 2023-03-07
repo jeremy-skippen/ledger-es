@@ -4,7 +4,7 @@ using Js.LedgerEs.Configuration;
 
 using MediatR;
 
-namespace Js.LedgerEs.Requests;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record GetLedger(
     Guid LedgerId

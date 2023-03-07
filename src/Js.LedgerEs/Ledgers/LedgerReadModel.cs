@@ -1,10 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 
-using Js.LedgerEs.Commands;
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.ReadModelPersistence;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed class LedgerReadModel : IReadModel
 {
@@ -43,7 +42,7 @@ public sealed class LedgerReadModel : IReadModel
         IsOpen = false;
         Entries = new List<JournalEntry>();
         Balance = 0;
-        Version = ulong.MaxValue;
+        Version = 0;
         ModifiedDate = DateTimeOffset.MinValue;
     }
 
@@ -95,12 +94,7 @@ public sealed class LedgerReadModel : IReadModel
         LedgerName = @event.LedgerName;
         IsOpen = true;
 
-        // Handle the case of an empty object - needed as stream revisions start at 0
-        if (Version == ulong.MaxValue)
-            Version = 0;
-        else
-            Version += 1;
-
+        Version += 1;
         ModifiedDate = @event.EventDateTime;
     }
 

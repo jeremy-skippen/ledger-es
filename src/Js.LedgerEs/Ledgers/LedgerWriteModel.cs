@@ -1,7 +1,6 @@
-﻿using Js.LedgerEs.Commands;
-using Js.LedgerEs.EventSourcing;
+﻿using Js.LedgerEs.EventSourcing;
 
-namespace Js.LedgerEs;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed class LedgerWriteModel : IWriteModel
 {
@@ -18,7 +17,7 @@ public sealed class LedgerWriteModel : IWriteModel
         LedgerId = Guid.Empty;
         IsOpen = false;
         Balance = 0;
-        Version = ulong.MaxValue;
+        Version = 0;
     }
 
     public void Apply(ISerializableEvent? @event)
@@ -48,11 +47,7 @@ public sealed class LedgerWriteModel : IWriteModel
         LedgerId = @event.LedgerId;
         IsOpen = true;
 
-        // Handle the case of an empty object - needed as stream revisions start at 0
-        if (Version == ulong.MaxValue)
-            Version = 0;
-        else
-            Version += 1;
+        Version += 1;
     }
 
     public void JournalReceipt(ReceiptJournalled @event)

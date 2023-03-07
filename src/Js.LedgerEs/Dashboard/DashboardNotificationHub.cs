@@ -4,7 +4,7 @@ using MediatR;
 
 using Microsoft.AspNetCore.SignalR;
 
-namespace Js.LedgerEs.Notification;
+namespace Js.LedgerEs.Dashboard;
 
 public interface IDashboardNotificationClient
 {

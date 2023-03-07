@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace Js.LedgerEs.ErrorHandling;
 
-public static class DependencyInjection
+public static class ErrorHandlingDependencyInjection
 {
     public static IApplicationBuilder UseErrorHandling(this IApplicationBuilder app)
         => app

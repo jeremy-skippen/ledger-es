@@ -9,7 +9,7 @@ using MediatR;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace Js.LedgerEs.Requests;
+namespace Js.LedgerEs.Ledgers;
 
 public sealed record GetLedgerRawJson(
     Guid LedgerId
