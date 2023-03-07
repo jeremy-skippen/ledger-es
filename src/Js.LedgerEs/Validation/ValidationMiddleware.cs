@@ -36,6 +36,7 @@ public class ValidationMiddleware
 
             response.ContentType = "application/problem+json";
             response.StatusCode = 400;
+            problem.Status = response.StatusCode;
 
             await JsonSerializer.SerializeAsync(response.Body, problem, JsonConfig.SerializerOptions, httpContext.RequestAborted);
         }

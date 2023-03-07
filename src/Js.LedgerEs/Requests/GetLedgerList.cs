@@ -42,7 +42,11 @@ public sealed class GetLedgerListRequestHandler : IRequestHandler<GetLedgerList,
         FROM dbo.LedgerView
         ORDER BY Id
         OFFSET @offset ROWS
-        FETCH NEXT @pageSize ROWS ONLY
+        FETCH NEXT @pageSize ROWS ONLY;
+    ";
+    private const string COUNT_QUERY = @"
+        SELECT COUNT(*)
+        FROM dbo.LedgerView;
     ";
 
     public GetLedgerListRequestHandler(IOptions<LedgerEsConfiguration> cfg)
@@ -58,9 +62,12 @@ public sealed class GetLedgerListRequestHandler : IRequestHandler<GetLedgerList,
         var pageSize = request.PageSize ?? 10;
         var offset = page * pageSize;
 
-        var results = await conn.QueryAsync<LedgerListView>(QUERY, new { offset, pageSize });
-
-        return new GetLedgerListResponse(results, page, pageSize, results.Count());
+        return new GetLedgerListResponse(
+            await conn.QueryAsync<LedgerListView>(QUERY, new { offset, pageSize }),
+            page,
+            pageSize,
+            await conn.ExecuteScalarAsync<int>(COUNT_QUERY)
+        );
     }
 }
 
@@ -68,7 +75,7 @@ public sealed record GetLedgerListResponse(
     IEnumerable<LedgerListView> Results,
     int Page,
     int PageSize,
-    int Count
+    int TotalCount
 );
 
 public sealed record LedgerListView(

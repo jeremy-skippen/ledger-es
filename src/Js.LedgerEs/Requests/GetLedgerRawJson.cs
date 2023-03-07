@@ -30,13 +30,13 @@ public sealed class GetLedgerRawJsonRequestHandler : IRequestHandler<GetLedgerRa
 
     private const string QUERY = @"
         SELECT
-            LedgerId,
-            LedgerName,
-            IsOpen,
-            Entries = JSON_QUERY(Entries, '$'),
-            Balance,
-            [Version],
-            ModifiedDate
+            ledgerId,
+            ledgerName,
+            isOpen,
+            entries = JSON_QUERY(Entries, '$'),
+            balance,
+            [version],
+            modifiedDate
         FROM dbo.LedgerView
         WHERE LedgerId = @LedgerId
         FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER

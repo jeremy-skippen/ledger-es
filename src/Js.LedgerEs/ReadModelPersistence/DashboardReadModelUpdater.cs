@@ -59,8 +59,7 @@ public class DashboardReadModelUpdater : IReadModelUpdater
 
     public async Task ApplyEventToReadModel(SqlConnection conn, IDbTransaction transaction, ISerializableEvent @event, CancellationToken cancellationToken)
     {
-        var dashboardResponse = await _mediator.Send(new GetDashboard(), cancellationToken);
-        var dashboard = dashboardResponse.Dashboard;
+        var dashboard = await _mediator.Send(new GetDashboard(), cancellationToken);
 
         dashboard.Apply(@event);
 

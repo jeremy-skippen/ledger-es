@@ -17,7 +17,8 @@ public sealed class Ledger : IAggregate
         Guid EntryId,
         string Description,
         decimal Amount,
-        JournalType Type
+        JournalType Type,
+        DateTimeOffset JournalDate
     );
 
     public Guid LedgerId { get; private set; }
@@ -107,7 +108,13 @@ public sealed class Ledger : IAggregate
         if (!IsOpen)
             throw new InvalidStateTransitionException(this, @event, "Cannot receipt to a closed ledger");
 
-        Entries.Add(new JournalEntry(@event.EventId, @event.Description, @event.Amount, JournalType.Receipt));
+        Entries.Add(new JournalEntry(
+            @event.EventId,
+            @event.Description,
+            @event.Amount,
+            JournalType.Receipt,
+            @event.EventDateTime
+        ));
         Balance += @event.Amount;
         Version += 1;
         ModifiedDate = @event.EventDateTime;
@@ -120,7 +127,13 @@ public sealed class Ledger : IAggregate
         if (Balance < @event.Amount)
             throw new InvalidStateTransitionException(this, @event, $"Ledger has insufficient balance - ${Balance:f2}", nameof(@event.Amount));
 
-        Entries.Add(new JournalEntry(@event.EventId, @event.Description, -@event.Amount, JournalType.Payment));
+        Entries.Add(new JournalEntry(
+            @event.EventId,
+            @event.Description,
+            -@event.Amount,
+            JournalType.Payment,
+            @event.EventDateTime
+        ));
         Balance -= @event.Amount;
         Version += 1;
         ModifiedDate = @event.EventDateTime;

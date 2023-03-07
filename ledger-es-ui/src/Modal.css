@@ -1,0 +1,60 @@
+.modal-backdrop {
+    background: rgba(26, 26, 26, 0.8);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.modal {
+    background: rgb(36, 36, 36);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0.5rem rgba(255, 255, 255, 0.25);
+    flex: 1 1;
+    max-width: min(calc(100vw - 2rem), 40rem);
+}
+
+.modal-header {
+    padding: 1rem;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.modal-header .close {
+    background: transparent;
+    border: 0 none;
+    border-radius: 0.75rem;
+    float: right;
+    padding: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.modal-header .close:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border: 0 none;
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
+.modal-header + .modal-body {
+    padding-top: 0;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    text-align: right;
+}

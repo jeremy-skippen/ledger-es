@@ -1,0 +1,36 @@
+.dashboard-root {
+    margin-bottom: 2rem;
+}
+
+.dashboard-section {
+    margin-bottom: 1rem;
+}
+
+.dashboard-section h2 {
+    font-size: 2rem;
+    font-weight: 100;
+    margin: 0;
+}
+
+.dashboard-hero-number {
+    font-size: 4rem;
+    font-weight: 500;
+    margin: -0.75rem 0 0;
+}
+
+.dashboard-sub-number {
+    font-size: 0.8rem;
+    margin-left: .925rem;    
+}
+
+@media (min-width: 720px) {
+    .dashboard-root {
+        align-items: start;
+        display: flex;
+    }
+
+    .dashboard-section {
+        flex: 1 1;
+        margin-bottom: 0;
+    }
+}

@@ -9,9 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.Requests;
 
-public sealed record GetDashboard() : IRequest<GetDashboardResponse>;
+public sealed record GetDashboard() : IRequest<Dashboard>;
 
-public sealed class GetDashboardRequestHandler : IRequestHandler<GetDashboard, GetDashboardResponse>
+public sealed class GetDashboardRequestHandler : IRequestHandler<GetDashboard, Dashboard>
 {
     private readonly IOptions<LedgerEsConfiguration> _cfg;
     private readonly IMediator _mediator;
@@ -38,12 +38,10 @@ public sealed class GetDashboardRequestHandler : IRequestHandler<GetDashboard, G
         _mediator = mediator;
     }
 
-    public async Task<GetDashboardResponse> Handle(GetDashboard request, CancellationToken cancellationToken)
+    public async Task<Dashboard> Handle(GetDashboard request, CancellationToken cancellationToken)
     {
         using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
 
-        return new GetDashboardResponse(await conn.QuerySingleOrDefaultAsync<Dashboard>(QUERY) ?? new Dashboard());
+        return await conn.QuerySingleOrDefaultAsync<Dashboard>(QUERY) ?? new Dashboard();
     }
 }
-
-public sealed record GetDashboardResponse(Dashboard Dashboard);

@@ -14,7 +14,6 @@ using MediatR;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-var isDevelopment = builder.Environment.IsDevelopment();
 
 builder.Configuration
     .AddEnvironmentVariables();
@@ -34,6 +33,8 @@ builder.Services
     })
     .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(builder.Configuration.GetConnectionString("EventStore"))))
     .AddReadModelPersistence()
+    .AddCors()
+    .AddProblemDetails()
     .AddEndpointsApiExplorer()
     .AddSwaggerGen(c =>
     {
@@ -53,18 +54,20 @@ var app = builder.Build();
 
 app
     .UseEventSerialization()
+    .UseErrorHandling()
     .UseValidation()
-    .UseMiddleware<ApplicationExceptionHandlingMiddleware>()
-    .UseSwagger();
-
-if (isDevelopment)
-{
-    app.UseSwaggerUI(c =>
+    .UseCors(p =>
+    {
+        p.AllowAnyOrigin();
+        p.AllowAnyMethod();
+        p.AllowAnyHeader();
+    })
+    .UseSwagger()
+    .UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ledger ES V1");
         c.RoutePrefix = "";
     });
-}
 
 app.MapGet(
     "/api/dashboard",

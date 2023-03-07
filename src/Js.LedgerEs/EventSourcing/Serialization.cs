@@ -55,6 +55,8 @@ public class SerializableEventMapper
 
 public static class SerializationExtensions
 {
+    // TODO: Prefer DI & configuration over reflection
+
     public static IApplicationBuilder UseEventSerialization(this IApplicationBuilder app)
     {
         var types = typeof(SerializationExtensions).Assembly

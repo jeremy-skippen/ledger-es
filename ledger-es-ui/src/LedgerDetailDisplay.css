@@ -1,0 +1,28 @@
+.ledger-entry {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem;
+}
+
+.ledger-entry + .ledger-entry {
+    margin-top: 0.5rem;
+}
+
+.ledger-entry .description {
+    flex: 1 0;
+}
+
+.ledger-entry .amount {
+    flex: 0 1;
+    white-space: nowrap;
+}
+
+.ledger-entry .meta {
+    flex: 0 0 100%;
+    font-size: 0.8rem;
+}
+
+.ledger-entry .meta::first-letter {
+    text-transform: capitalize;
+}

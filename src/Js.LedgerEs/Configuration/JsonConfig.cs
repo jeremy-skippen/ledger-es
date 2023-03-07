@@ -7,6 +7,7 @@ public static class JsonConfig
 {
     public static readonly JsonSerializerOptions SerializerOptions = new()
     {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = {
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
         },
