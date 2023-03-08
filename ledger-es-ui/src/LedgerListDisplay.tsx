@@ -33,7 +33,7 @@ export default function LedgerListDisplay({
       {ledgerList?.results.length ? (
         <>
           <div className="ledger-header">
-            <div className="total">{ledgerList.totalCount} total ledgers</div>
+            <div className="search"></div>
             <button type="button" onClick={() => setShowAddModal(true)}>
               Add Ledger
             </button>

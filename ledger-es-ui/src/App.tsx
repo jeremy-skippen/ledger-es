@@ -16,11 +16,14 @@ export default function App() {
 
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:8082/signalr/dashboard", { withCredentials: false })
+      .withUrl("http://localhost:8082/signalr/dashboard", {
+        withCredentials: false,
+      })
       .build();
 
-    conn.on("DashboardUpdated", (dashboard: Dashboard) => setDashboard(dashboard));
-
+    conn.on("DashboardUpdated", (dashboard: Dashboard) =>
+      setDashboard(dashboard)
+    );
     conn.start();
 
     return () => {

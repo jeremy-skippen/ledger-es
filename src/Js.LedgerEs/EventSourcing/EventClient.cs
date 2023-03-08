@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 
 using EventStore.Client;
 
@@ -121,7 +122,13 @@ public sealed class EventClient : IEventClient
         );
 
     public string GetStreamNameForAggregate<T>(Guid streamId) where T : class, IWriteModel
-        => $"{typeof(T).Name.ToLowerInvariant()}-{streamId:d}";
+    {
+        var attr = typeof(T).GetCustomAttribute<StreamNameFormatAttribute>();
+        if (attr is null)
+            return $"{typeof(T).Name.ToLowerInvariant()}-{streamId:d}";
+
+        return string.Format(attr.Format, streamId);
+    }
 
     private Type? GetEventTypeByName(string name)
         => _knownEvents.Where(r => r.Name == name).Select(r => r.Type).SingleOrDefault();

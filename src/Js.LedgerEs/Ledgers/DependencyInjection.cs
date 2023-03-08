@@ -50,5 +50,6 @@ public static class LedgersDependencyInjection
 
     public static void MapLedgerHubs(this IEndpointRouteBuilder api)
     {
+        api.MapHub<LedgerNotificationHub>("/ledger");
     }
 }

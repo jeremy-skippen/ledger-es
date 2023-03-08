@@ -57,7 +57,11 @@ builder.Services
     })
     ;
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(opt =>
+    {
+        opt.PayloadSerializerOptions = JsonConfig.SerializerOptions;
+    });
 
 builder.Logging
     .ClearProviders()

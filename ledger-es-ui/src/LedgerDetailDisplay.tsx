@@ -1,3 +1,4 @@
+import * as signalR from "@microsoft/signalr";
 import { useEffect, useMemo, useState } from "react";
 import { currencyFormat, dateTimeFormat } from "./config";
 import { Ledger, getLedger } from "./ledger";
@@ -24,6 +25,21 @@ export default function LedgerDetailDisplay({
     getLedger(ledgerId).then(setLedger);
   }, [ledgerId]);
 
+  useEffect(() => {
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl(`http://localhost:8082/signalr/ledger?ledgerId=${ledgerId}`, {
+        withCredentials: false,
+      })
+      .build();
+
+    conn.on("LedgerUpdated", (ledger: Ledger) => setLedger(ledger));
+    conn.start();
+
+    return () => {
+      conn.stop();
+    };
+  }, [ledgerId]);
+
   return (
     <Modal>
       {ledger ? (
@@ -32,18 +48,24 @@ export default function LedgerDetailDisplay({
             <button className="close" type="button" onClick={onClose}>
               &times;
             </button>
-            <h2>{ledger.ledgerName} - {currencyFormat.format(ledger.balance)}</h2>
+            <h2>
+              {ledger.ledgerName} - {currencyFormat.format(ledger.balance)}
+            </h2>
           </ModalHeader>
           <ModalBody>
             {entries.length > 0 ? (
               entries.map((entry) => (
-                <div key={entry.entryId} className={`ledger-entry ${entry.type}`}>
+                <div
+                  key={entry.entryId}
+                  className={`ledger-entry ${entry.type}`}
+                >
                   <div className="description">{entry.description}</div>
                   <div className="amount">
                     {currencyFormat.format(entry.amount)}
                   </div>
                   <div className="meta">
-                    {entry.type} journalled {dateTimeFormat.format(new Date(entry.journalDate))}
+                    {entry.type} journalled{" "}
+                    {dateTimeFormat.format(new Date(entry.journalDate))}
                   </div>
                 </div>
               ))

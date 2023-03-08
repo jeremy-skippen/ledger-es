@@ -2,6 +2,7 @@
 
 namespace Js.LedgerEs.Ledgers;
 
+[StreamNameFormat("ledger-{0:d}")]
 public sealed class LedgerWriteModel : IWriteModel
 {
     public Guid LedgerId { get; private set; }
