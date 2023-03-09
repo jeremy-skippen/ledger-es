@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { currencyFormat, dateTimeFormat } from "./config";
-import { LedgerList, getLedgerList } from "./ledger";
+import { LedgerList, useLedgerListLiveUpdate } from "./ledger";
 import AddLedgerModal from "./AddLedgerModal";
 import "./LedgerListDisplay.css";
 
@@ -24,9 +24,7 @@ export default function LedgerListDisplay({
   const allowPrev = page > 0;
   const allowNext = page < totalPages - 1;
 
-  useEffect(() => {
-    getLedgerList(page).then((ll) => setLedgerList(ll));
-  }, [page]);
+  useLedgerListLiveUpdate(page, ledgerList, setLedgerList);
 
   return (
     <>

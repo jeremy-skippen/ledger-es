@@ -1,7 +1,6 @@
-import * as signalR from "@microsoft/signalr";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { currencyFormat, dateTimeFormat } from "./config";
-import { Ledger, getLedger } from "./ledger";
+import { Ledger, useLedgerLiveUpdate } from "./ledger";
 import Modal, { ModalBody, ModalHeader } from "./Modal";
 import "./LedgerDetailDisplay.css";
 
@@ -21,24 +20,7 @@ export default function LedgerDetailDisplay({
     return reversed;
   }, [ledger]);
 
-  useEffect(() => {
-    getLedger(ledgerId).then(setLedger);
-  }, [ledgerId]);
-
-  useEffect(() => {
-    const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`http://localhost:8082/signalr/ledger?ledgerId=${ledgerId}`, {
-        withCredentials: false,
-      })
-      .build();
-
-    conn.on("LedgerUpdated", (ledger: Ledger) => setLedger(ledger));
-    conn.start();
-
-    return () => {
-      conn.stop();
-    };
-  }, [ledgerId]);
+  useLedgerLiveUpdate(ledgerId, setLedger);
 
   return (
     <Modal>

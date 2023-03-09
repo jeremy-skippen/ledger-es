@@ -6,3 +6,5 @@ export const currencyFormat = new Intl.NumberFormat("en-AU", {
   style: "currency",
   currency: "AUD",
 });
+
+export const API_BASE_URI = "http://localhost:8082";

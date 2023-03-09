@@ -8,6 +8,7 @@ namespace Js.LedgerEs.Ledgers;
 
 public interface ILedgerNotificationClient
 {
+    Task LedgerAdded(LedgerReadModel dashboard);
     Task LedgerUpdated(LedgerReadModel dashboard);
 }
 
@@ -36,6 +37,18 @@ public sealed class LedgerNotificationHub : Hub<ILedgerNotificationClient>
 
         await base.OnDisconnectedAsync(exception);
     }
+
+    public async Task ListenToLedgers(string[] ledgerIds)
+    {
+        foreach (var ledgerId in ledgerIds)
+            await Groups.AddToGroupAsync(Context.ConnectionId, ledgerId);
+    }
+
+    public async Task UnListenToLedgers(string[] ledgerIds)
+    {
+        foreach (var ledgerId in ledgerIds)
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, ledgerId);
+    }
 }
 
 public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<NotifyReadModelUpdated<LedgerReadModel>>
@@ -47,6 +60,16 @@ public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<Noti
         _hubContext = hubContext;
     }
 
-    public Task Handle(NotifyReadModelUpdated<LedgerReadModel> notification, CancellationToken cancellationToken)
-        => _hubContext.Clients.Groups(notification.Model.LedgerId.ToString("d")).LedgerUpdated(notification.Model);
+    public async Task Handle(NotifyReadModelUpdated<LedgerReadModel> notification, CancellationToken cancellationToken)
+    {
+        var model = notification.Model;
+        if (model.Version == 1)
+            await _hubContext.Clients
+                .All
+                .LedgerAdded(model);
+        else
+            await _hubContext.Clients
+                .Groups(model.LedgerId.ToString("d"))
+                .LedgerUpdated(model);
+    }
 }
