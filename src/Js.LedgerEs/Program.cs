@@ -1,4 +1,3 @@
-using Js.LedgerEs;
 using Js.LedgerEs.Configuration;
 using Js.LedgerEs.Dashboard;
 using Js.LedgerEs.ErrorHandling;
@@ -22,8 +21,9 @@ builder.Services
     {
         cfg.SqlServerConnectionString = builder.Configuration.GetConnectionString("SqlServer") ?? throw new Exception("SqlServer connection string is missing");
     })
+    .AddSingleton(JsonConfig.SerializerOptions)
     .AddLogging()
-    .AddAutoMapper(typeof(MappingProfile))
+    .AddAutoMapper(typeof(LedgerCommandToSerializableEventMappingProfile))
     .AddValidators()
     .AddMediatR(cfg =>
     {

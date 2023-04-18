@@ -4,6 +4,7 @@ using System.Text.Json;
 using Dapper;
 
 using Js.LedgerEs.Configuration;
+using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.ReadModelPersistence;
 
 using MediatR;

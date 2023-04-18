@@ -26,7 +26,7 @@ public sealed class CloseLedgerTest
             .AddLogging()
             .AddAutoMapper(am =>
             {
-                am.AddProfile<MappingProfile>();
+                am.AddProfile<LedgerCommandToSerializableEventMappingProfile>();
             })
             .AddTransient<IValidator<CloseLedger>, CloseLedgerValidator>()
             .AddTransient<IRequestHandler<CloseLedger, LedgerClosed>, CloseLedgerHandler>()

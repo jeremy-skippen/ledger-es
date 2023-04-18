@@ -2,16 +2,16 @@
 
 using FluentValidation;
 
-using Js.LedgerEs.Configuration;
-
 namespace Js.LedgerEs.Validation;
 
 public class ValidationMiddleware
 {
+    private readonly JsonSerializerOptions _jsonOptions;
     private readonly RequestDelegate _next;
 
-    public ValidationMiddleware(RequestDelegate next)
+    public ValidationMiddleware(JsonSerializerOptions jsonOptions, RequestDelegate next)
     {
+        _jsonOptions = jsonOptions;
         _next = next;
     }
 
@@ -38,7 +38,7 @@ public class ValidationMiddleware
             response.StatusCode = 400;
             problem.Status = response.StatusCode;
 
-            await JsonSerializer.SerializeAsync(response.Body, problem, JsonConfig.SerializerOptions, httpContext.RequestAborted);
+            await JsonSerializer.SerializeAsync(response.Body, problem, _jsonOptions, httpContext.RequestAborted);
         }
     }
 }

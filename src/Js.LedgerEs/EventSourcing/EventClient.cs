@@ -3,8 +3,6 @@ using System.Text.Json;
 
 using EventStore.Client;
 
-using Js.LedgerEs.Configuration;
-
 namespace Js.LedgerEs.EventSourcing;
 
 /// <summary>
@@ -108,14 +106,17 @@ public sealed class EventClient : IEventClient
 {
     private readonly EventStoreClient _eventStore;
     private readonly IEnumerable<SerializableEventRegistration> _knownEvents;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public EventClient(
         EventStoreClient eventStore,
-        IEnumerable<SerializableEventRegistration> knownEvents
+        IEnumerable<SerializableEventRegistration> knownEvents,
+        JsonSerializerOptions jsonOptions
     )
     {
         _eventStore = eventStore;
         _knownEvents = knownEvents;
+        _jsonOptions = jsonOptions;
     }
 
     public async Task<T?> AggregateStream<T>(
@@ -168,7 +169,15 @@ public sealed class EventClient : IEventClient
         }
         catch (WrongExpectedVersionException ex)
         {
-            throw new EventStoreConcurrencyException(aggregate, ex.Message);
+            throw new EventStoreConcurrencyException(
+                aggregate,
+                @event,
+                expectedVersion,
+                ex.ActualVersion.HasValue
+                    ? (ulong)ex.ActualVersion + 1
+                    : 0,
+                ex.Message
+            );
         }
     }
 
@@ -178,7 +187,7 @@ public sealed class EventClient : IEventClient
         if (type == null || !type.IsAssignableTo(typeof(ISerializableEvent)))
             return null;
 
-        if (JsonSerializer.Deserialize(resolvedEvent.Event.Data.Span, type, JsonConfig.SerializerOptions) is not ISerializableEvent @event)
+        if (JsonSerializer.Deserialize(resolvedEvent.Event.Data.Span, type, _jsonOptions) is not ISerializableEvent @event)
             return null;
 
         @event.EventId = resolvedEvent.Event.EventId.ToGuid();
@@ -191,7 +200,7 @@ public sealed class EventClient : IEventClient
         => new(
             Uuid.FromGuid(@event.EventId),
             GetEventNameByType(@event.GetType()) ?? "UnknownEvent",
-            JsonSerializer.SerializeToUtf8Bytes(@event, JsonConfig.SerializerOptions),
+            JsonSerializer.SerializeToUtf8Bytes(@event, _jsonOptions),
             JsonSerializer.SerializeToUtf8Bytes(new { })
         );
 

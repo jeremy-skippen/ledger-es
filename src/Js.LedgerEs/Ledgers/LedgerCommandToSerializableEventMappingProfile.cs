@@ -1,12 +1,10 @@
 ﻿using AutoMapper;
 
-using Js.LedgerEs.Ledgers;
+namespace Js.LedgerEs.Ledgers;
 
-namespace Js.LedgerEs;
-
-public class MappingProfile : Profile
+public class LedgerCommandToSerializableEventMappingProfile : Profile
 {
-    public MappingProfile()
+    public LedgerCommandToSerializableEventMappingProfile()
     {
         CreateMap<OpenLedger, LedgerOpened>()
             .ConstructUsing(r => new LedgerOpened(r.LedgerId, r.LedgerName));

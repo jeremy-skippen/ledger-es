@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
 
-using Js.LedgerEs.Configuration;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace Js.LedgerEs.ErrorHandling;
@@ -14,11 +12,17 @@ namespace Js.LedgerEs.ErrorHandling;
 public class ApplicationExceptionHandlingMiddleware
 {
     private readonly ILogger<LedgerEsException> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
     private readonly RequestDelegate _next;
 
-    public ApplicationExceptionHandlingMiddleware(ILogger<LedgerEsException> logger, RequestDelegate next)
+    public ApplicationExceptionHandlingMiddleware(
+        ILogger<LedgerEsException> logger,
+        JsonSerializerOptions jsonOptions,
+        RequestDelegate next)
+
     {
         _logger = logger;
+        _jsonOptions = jsonOptions;
         _next = next;
     }
 
@@ -36,17 +40,13 @@ public class ApplicationExceptionHandlingMiddleware
             var problem = new ProblemDetails()
             {
                 Detail = ex.Message,
-                Status = ex switch
-                {
-                    EventStoreConcurrencyException => 409,
-                    _ => 400,
-                },
+                Status = ex.HttpStatusCode,
             };
 
             response.ContentType = "application/problem+json";
             response.StatusCode = problem.Status ?? 400;
 
-            await JsonSerializer.SerializeAsync(response.Body, problem, JsonConfig.SerializerOptions, httpContext.RequestAborted);
+            await JsonSerializer.SerializeAsync(response.Body, problem, _jsonOptions, httpContext.RequestAborted);
         }
     }
 }

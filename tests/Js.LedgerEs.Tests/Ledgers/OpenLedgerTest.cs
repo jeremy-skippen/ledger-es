@@ -26,7 +26,7 @@ public sealed class OpenLedgerTest
             .AddLogging()
             .AddAutoMapper(am =>
             {
-                am.AddProfile<MappingProfile>();
+                am.AddProfile<LedgerCommandToSerializableEventMappingProfile>();
             })
             .AddTransient<IValidator<OpenLedger>, OpenLedgerValidator>()
             .AddTransient<IRequestHandler<OpenLedger, LedgerOpened>, OpenLedgerHandler>()
