@@ -7,30 +7,99 @@ using Js.LedgerEs.Configuration;
 
 namespace Js.LedgerEs.EventSourcing;
 
+/// <summary>
+/// The client interface to the event store.
+/// </summary>
 public interface IEventClient
 {
+    /// <summary>
+    /// Get the current state of the write model for a stream by opening the stream and aggregating all events.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the write model to create.
+    /// </typeparam>
+    /// <param name="streamId">
+    /// The stream name / id to aggregate.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancellation token.
+    /// </param>
+    /// <returns>
+    /// The aggregated write model.
+    /// </returns>
     Task<T?> AggregateStream<T>(
         string streamId,
         CancellationToken cancellationToken
     ) where T : class, IWriteModel, new();
 
+    /// <summary>
+    /// Append an event to a stream in the event store.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the event to write to the store.
+    /// </typeparam>
+    /// <param name="streamName">
+    /// The stream name / id to write to.
+    /// </param>
+    /// <param name="aggregate">
+    /// The write model the event relates to.
+    /// </param>
+    /// <param name="expectedVersion">
+    /// The stream version expected. If the stream version in the store is different from the expected version a
+    /// <see cref="EventStoreConcurrencyException"/> will be thrown.
+    /// </param>
+    /// <param name="event">
+    /// The event to write to the store.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancellation token.
+    /// </param>
+    /// <exception cref="EventStoreConcurrencyException">
+    /// Thrown when the expected stream version does not match the actual stream version in the event store.
+    /// </exception>
     Task AppendToStreamAsync<T>(
         string streamName,
         IWriteModel aggregate,
-        StreamRevision expectedVersion,
+        ulong expectedVersion,
         T @event,
         CancellationToken cancellationToken
     )
         where T : class, ISerializableEvent;
 
-    ISerializableEvent? DeserializeFromResolvedEvent(ResolvedEvent resolvedEvent);
-
+    /// <summary>
+    /// Get the stream name for an aggregate with the given unique identifier.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the write model the stream represents.
+    /// </typeparam>
+    /// <param name="streamId">
+    /// The stream unique identifier.
+    /// </param>
+    /// <returns>
+    /// The stream name.
+    /// </returns>
     string GetStreamNameForAggregate<T>(Guid streamId) where T : class, IWriteModel;
 
-    Task<StreamSubscription> SubscribeToAllAsync(
-        FromAll start,
-        Func<StreamSubscription, ResolvedEvent, CancellationToken, Task> eventAppeared,
-        Action<StreamSubscription, SubscriptionDroppedReason, Exception?>? subscriptionDropped,
+    /// <summary>
+    /// Subscribe to the "All" stream in the event store.
+    /// This is particularly useful for writing read models / aggregates to a separate data store.
+    /// </summary>
+    /// <param name="fromPosition">
+    /// Where to read the all stream from. Set to <c>0</c> to read from the beginning.
+    /// </param>
+    /// <param name="onEventAppeared">
+    /// Callback invoked when a new event appears on the all stream.
+    /// </param>
+    /// <param name="onSubscriptionDropped">
+    /// Callback invoked if the subscription is dropped for any reason.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancellation token.
+    /// </param>
+    Task SubscribeToAllStreamAsync(
+        ulong fromPosition,
+        Func<ISerializableEvent?, ulong, CancellationToken, Task> onEventAppeared,
+        Action<string, Exception?> onSubscriptionDropped,
         CancellationToken cancellationToken
     );
 }
@@ -49,7 +118,10 @@ public sealed class EventClient : IEventClient
         _knownEvents = knownEvents;
     }
 
-    public async Task<T?> AggregateStream<T>(string streamId, CancellationToken cancellationToken) where T : class, IWriteModel, new()
+    public async Task<T?> AggregateStream<T>(
+        string streamId,
+        CancellationToken cancellationToken
+    ) where T : class, IWriteModel, new()
     {
         var readResult = _eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -77,7 +149,7 @@ public sealed class EventClient : IEventClient
     public async Task AppendToStreamAsync<T>(
         string streamName,
         IWriteModel aggregate,
-        StreamRevision expectedVersion,
+        ulong expectedVersion,
         T @event,
         CancellationToken cancellationToken
     )
@@ -87,7 +159,9 @@ public sealed class EventClient : IEventClient
         {
             await _eventStore.AppendToStreamAsync(
                 streamName,
-                expectedVersion,
+                expectedVersion == 0
+                    ? StreamRevision.None
+                    : expectedVersion - 1,
                 new[] { SerializeToEventData(@event) },
                 cancellationToken: cancellationToken
             );
@@ -98,7 +172,7 @@ public sealed class EventClient : IEventClient
         }
     }
 
-    public ISerializableEvent? DeserializeFromResolvedEvent(ResolvedEvent resolvedEvent)
+    private ISerializableEvent? DeserializeFromResolvedEvent(ResolvedEvent resolvedEvent)
     {
         var type = GetEventTypeByName(resolvedEvent.Event.EventType);
         if (type == null || !type.IsAssignableTo(typeof(ISerializableEvent)))
@@ -136,15 +210,30 @@ public sealed class EventClient : IEventClient
     private string? GetEventNameByType(Type type)
         => _knownEvents.Where(r => r.Type == type).Select(r => r.Name).SingleOrDefault();
 
-    public Task<StreamSubscription> SubscribeToAllAsync(
-        FromAll start,
-        Func<StreamSubscription, ResolvedEvent, CancellationToken, Task> eventAppeared,
-        Action<StreamSubscription, SubscriptionDroppedReason, Exception?>? subscriptionDropped,
+    public Task SubscribeToAllStreamAsync(
+        ulong fromPosition,
+        Func<ISerializableEvent?, ulong, CancellationToken, Task> onEventAppeared,
+        Action<string, Exception?> onSubscriptionDropped,
         CancellationToken cancellationToken
     ) => _eventStore.SubscribeToAllAsync(
-            start,
-            eventAppeared: eventAppeared,
-            subscriptionDropped: subscriptionDropped,
+            fromPosition == 0
+                ? FromAll.Start
+                : FromAll.After(new Position(fromPosition, fromPosition)),
+            eventAppeared: (StreamSubscription _, ResolvedEvent resolvedEvent, CancellationToken ct) => onEventAppeared(
+                DeserializeFromResolvedEvent(resolvedEvent),
+                resolvedEvent.Event.Position.CommitPosition,
+                ct
+            ),
+            subscriptionDropped: (StreamSubscription _, SubscriptionDroppedReason reason, Exception? exception) => onSubscriptionDropped(
+                reason switch
+                {
+                    SubscriptionDroppedReason.Disposed => "the subscription was disposed",
+                    SubscriptionDroppedReason.SubscriberError => "there is an error in user code",
+                    SubscriptionDroppedReason.ServerError => "there was a server error",
+                    _ => "unknown reason",
+                },
+                exception
+            ),
             cancellationToken: cancellationToken
         );
 }

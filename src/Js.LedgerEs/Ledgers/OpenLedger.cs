@@ -2,17 +2,15 @@ using AutoMapper;
 
 using FluentValidation;
 
+using Js.LedgerEs.Cqrs;
 using Js.LedgerEs.EventSourcing;
-
-using MediatR;
 
 namespace Js.LedgerEs.Ledgers;
 
 public sealed record OpenLedger(
     Guid LedgerId,
     string LedgerName
-) : ICommand,
-    IRequest<LedgerOpened>
+) : ICommand<LedgerOpened>
 {
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }

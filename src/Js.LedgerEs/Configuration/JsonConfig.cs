@@ -6,7 +6,7 @@ namespace Js.LedgerEs.Configuration;
 /// <summary>
 /// Contains the system-wide JSON configuration.
 /// </summary>
-public static class JsonConfig
+internal static class JsonConfig
 {
     /// <summary>
     /// The default JSON serializer options to use with System.Text.Json.

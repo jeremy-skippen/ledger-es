@@ -51,7 +51,7 @@ public sealed class LedgerNotificationHub : Hub<ILedgerNotificationClient>
     }
 }
 
-public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<NotifyReadModelUpdated<LedgerReadModel>>
+public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<ReadModelUpdated<LedgerReadModel>>
 {
     private readonly IHubContext<LedgerNotificationHub, ILedgerNotificationClient> _hubContext;
 
@@ -60,7 +60,7 @@ public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<Noti
         _hubContext = hubContext;
     }
 
-    public async Task Handle(NotifyReadModelUpdated<LedgerReadModel> notification, CancellationToken cancellationToken)
+    public async Task Handle(ReadModelUpdated<LedgerReadModel> notification, CancellationToken cancellationToken)
     {
         var model = notification.Model;
         if (model.Version == 1)

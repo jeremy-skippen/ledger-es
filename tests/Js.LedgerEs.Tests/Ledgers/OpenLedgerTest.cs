@@ -1,6 +1,4 @@
-﻿using EventStore.Client;
-
-using FluentValidation;
+﻿using FluentValidation;
 
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Ledgers;
@@ -106,7 +104,7 @@ public sealed class OpenLedgerTest
             .Verify(e => e.AppendToStreamAsync(
                 ledgerStreamName,
                 It.IsAny<IWriteModel>(),
-                StreamRevision.None,
+                0,
                 response,
                 It.IsAny<CancellationToken>()
             ), Times.Once);
@@ -143,7 +141,7 @@ public sealed class OpenLedgerTest
             .Verify(e => e.AppendToStreamAsync(
                 ledgerStreamName,
                 ledger,
-                ledger.Version - 2,
+                ledger.Version - 1,
                 response,
                 It.IsAny<CancellationToken>()
             ), Times.Once);

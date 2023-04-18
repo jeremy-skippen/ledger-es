@@ -6,6 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Js.LedgerEs.ErrorHandling;
 
+/// <summary>
+/// Custom middleware that handles any application exception (<see cref="LedgerEsException"/>) and serializes an
+/// equivalent <see cref="ProblemDetails"/> object to the HTTP response.
+/// The middleware will also log the exception as an error.
+/// </summary>
 public class ApplicationExceptionHandlingMiddleware
 {
     private readonly ILogger<LedgerEsException> _logger;

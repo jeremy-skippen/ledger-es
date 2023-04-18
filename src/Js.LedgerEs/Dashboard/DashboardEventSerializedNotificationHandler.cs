@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.Dashboard;
 
-public sealed class UpdateDashboardReadModelHandler : INotificationHandler<UpdateReadModel>
+public sealed class DashboardEventSerializedNotificationHandler : INotificationHandler<EventSerialized>
 {
     private const string QUERY = @"
         UPDATE TOP (1) dbo.DashboardView WITH (UPDLOCK, SERIALIZABLE)
@@ -45,12 +45,12 @@ public sealed class UpdateDashboardReadModelHandler : INotificationHandler<Updat
     ";
 
     private readonly IOptions<LedgerEsConfiguration> _cfg;
-    private readonly ILogger<UpdateDashboardReadModelHandler> _logger;
+    private readonly ILogger<DashboardEventSerializedNotificationHandler> _logger;
     private readonly IMediator _mediator;
 
-    public UpdateDashboardReadModelHandler(
+    public DashboardEventSerializedNotificationHandler(
         IOptions<LedgerEsConfiguration> cfg,
-        ILogger<UpdateDashboardReadModelHandler> logger,
+        ILogger<DashboardEventSerializedNotificationHandler> logger,
         IMediator mediator
     )
     {
@@ -59,7 +59,7 @@ public sealed class UpdateDashboardReadModelHandler : INotificationHandler<Updat
         _mediator = mediator;
     }
 
-    public async Task Handle(UpdateReadModel request, CancellationToken cancellationToken)
+    public async Task Handle(EventSerialized request, CancellationToken cancellationToken)
     {
         var dashboard = await _mediator.Send(new GetDashboard(), cancellationToken);
         var beforeVersion = dashboard.Version;
@@ -98,6 +98,6 @@ public sealed class UpdateDashboardReadModelHandler : INotificationHandler<Updat
             return;
         }
 
-        await _mediator.Publish(new NotifyReadModelUpdated<DashboardReadModel>(dashboard), cancellationToken);
+        await _mediator.Publish(new ReadModelUpdated<DashboardReadModel>(dashboard), cancellationToken);
     }
 }

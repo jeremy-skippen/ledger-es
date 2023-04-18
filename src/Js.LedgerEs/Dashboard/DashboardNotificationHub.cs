@@ -15,7 +15,7 @@ public sealed class DashboardNotificationHub : Hub<IDashboardNotificationClient>
 {
 }
 
-public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<NotifyReadModelUpdated<DashboardReadModel>>
+public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<ReadModelUpdated<DashboardReadModel>>
 {
     private readonly IHubContext<DashboardNotificationHub, IDashboardNotificationClient> _hubContext;
 
@@ -24,6 +24,6 @@ public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<N
         _hubContext = hubContext;
     }
 
-    public Task Handle(NotifyReadModelUpdated<DashboardReadModel> notification, CancellationToken cancellationToken)
+    public Task Handle(ReadModelUpdated<DashboardReadModel> notification, CancellationToken cancellationToken)
         => _hubContext.Clients.All.DashboardUpdated(notification.Model);
 }

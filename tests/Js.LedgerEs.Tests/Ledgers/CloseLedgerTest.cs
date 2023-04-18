@@ -156,7 +156,7 @@ public sealed class CloseLedgerTest
             .Verify(e => e.AppendToStreamAsync(
                 ledgerStreamName,
                 It.IsAny<IWriteModel>(),
-                ledger.Version - 2,
+                ledger.Version - 1,
                 response,
                 It.IsAny<CancellationToken>()
             ), Times.Once);
@@ -194,7 +194,7 @@ public sealed class CloseLedgerTest
             .Verify(e => e.AppendToStreamAsync(
                 ledgerStreamName,
                 It.IsAny<IWriteModel>(),
-                ledger.Version - 2,
+                ledger.Version - 1,
                 response,
                 It.IsAny<CancellationToken>()
             ), Times.Once);

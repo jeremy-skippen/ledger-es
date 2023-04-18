@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.Ledgers;
 
-public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel>
+public class LedgerEventSerializedNotificationHandler : INotificationHandler<EventSerialized>
 {
     private const string INSERT_QUERY = @"
         INSERT INTO dbo.LedgerView(LedgerId, LedgerName, IsOpen, Entries, Balance, [Version], ModifiedDate)
@@ -32,12 +32,12 @@ public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel
     ";
 
     private readonly IOptions<LedgerEsConfiguration> _cfg;
-    private readonly ILogger<UpdateLedgerReadModelHandler> _logger;
+    private readonly ILogger<LedgerEventSerializedNotificationHandler> _logger;
     private readonly IMediator _mediator;
 
-    public UpdateLedgerReadModelHandler(
+    public LedgerEventSerializedNotificationHandler(
         IOptions<LedgerEsConfiguration> cfg,
-        ILogger<UpdateLedgerReadModelHandler> logger,
+        ILogger<LedgerEventSerializedNotificationHandler> logger,
         IMediator mediator
     )
     {
@@ -46,7 +46,7 @@ public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel
         _mediator = mediator;
     }
 
-    public async Task Handle(UpdateReadModel request, CancellationToken cancellationToken)
+    public async Task Handle(EventSerialized request, CancellationToken cancellationToken)
     {
         var ledgerId = request.Event.GetStreamUniqueIdentifier();
         var ledgerResponse = await _mediator.Send(new GetLedger(ledgerId), cancellationToken);
@@ -92,6 +92,6 @@ public class UpdateLedgerReadModelHandler : INotificationHandler<UpdateReadModel
             return;
         }
 
-        await _mediator.Publish(new NotifyReadModelUpdated<LedgerReadModel>(ledger), cancellationToken);
+        await _mediator.Publish(new ReadModelUpdated<LedgerReadModel>(ledger), cancellationToken);
     }
 }

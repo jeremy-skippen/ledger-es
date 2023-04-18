@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 
-using EventStore.Client;
-
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -9,16 +7,11 @@ using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs;
-
-public interface ICommand
-{
-    Guid GetStreamUniqueIdentifier();
-}
+namespace Js.LedgerEs.Cqrs;
 
 public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
     IRequestHandler<TRequest, TResponse>
-        where TRequest : class, ICommand, IRequest<TResponse>
+        where TRequest : class, ICommand<TResponse>
         where TResponse : class, ISerializableEvent
         where TAggregate : class, IWriteModel, new()
 {
@@ -51,9 +44,7 @@ public abstract class AbstractCommandHandler<TRequest, TResponse, TAggregate> :
         await EventClient.AppendToStreamAsync(
             streamName,
             aggregate,
-            beforeVersion == 0
-                ? StreamRevision.None
-                : beforeVersion - 1,
+            beforeVersion,
             @event,
             cancellationToken
         );

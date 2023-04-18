@@ -1,7 +1,5 @@
 ﻿using Dapper;
 
-using EventStore.Client;
-
 using Js.LedgerEs.Configuration;
 
 using Microsoft.Data.SqlClient;
@@ -9,11 +7,32 @@ using Microsoft.Extensions.Options;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
+/// <summary>
+/// Repository used to store the position in the "all" stream for a projection.
+/// </summary>
 public interface IProjectionRevisionRepository
 {
-    Task<Position?> GetStreamPosition(string projectionName);
+    /// <summary>
+    /// Get the stream position for a projection.
+    /// </summary>
+    /// <param name="projectionName">
+    /// The name of the projection.
+    /// </param>
+    /// <returns>
+    /// The stream position.
+    /// </returns>
+    Task<ulong> GetStreamPosition(string projectionName);
 
-    Task SetStreamPosition(string projectionName, Position position);
+    /// <summary>
+    /// Set the stream position for a projection.
+    /// </summary>
+    /// <param name="projectionName">
+    /// The name of the projection.
+    /// </param>
+    /// <param name="position">
+    /// The stream position.
+    /// </param>
+    Task SetStreamPosition(string projectionName, ulong position);
 }
 
 public class ProjectionRevisionRepository : IProjectionRevisionRepository
@@ -42,21 +61,17 @@ public class ProjectionRevisionRepository : IProjectionRevisionRepository
         _cfg = cfg;
     }
 
-    public async Task<Position?> GetStreamPosition(string projectionName)
+    public async Task<ulong> GetStreamPosition(string projectionName)
     {
         using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
 
-        var rawPosition = await conn.ExecuteScalarAsync<ulong>(GET_QUERY, new { projectionName });
-        if (rawPosition == 0)
-            return null;
-
-        return new Position(rawPosition, rawPosition);
+        return await conn.ExecuteScalarAsync<ulong>(GET_QUERY, new { projectionName });
     }
 
-    public async Task SetStreamPosition(string projectionName, Position position)
+    public async Task SetStreamPosition(string projectionName, ulong position)
     {
         using var conn = new SqlConnection(_cfg.Value.SqlServerConnectionString);
 
-        await conn.ExecuteAsync(SET_QUERY, new { projectionName, streamPosition = (long)position.CommitPosition });
+        await conn.ExecuteAsync(SET_QUERY, new { projectionName, streamPosition = (long)position });
     }
 }

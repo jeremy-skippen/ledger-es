@@ -2,9 +2,8 @@
 
 using FluentValidation;
 
+using Js.LedgerEs.Cqrs;
 using Js.LedgerEs.EventSourcing;
-
-using MediatR;
 
 namespace Js.LedgerEs.Ledgers;
 
@@ -17,8 +16,7 @@ public sealed record JournalReceipt(
     Guid LedgerId,
     string Description,
     decimal Amount
-) : ICommand,
-    IRequest<ReceiptJournalled>
+) : ICommand<ReceiptJournalled>
 {
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }

@@ -1,15 +1,23 @@
 ﻿using System.Transactions;
 
-using EventStore.Client;
-
 using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
+/// <summary>
+/// Handles a persistent subscription to the event store "all" stream and emits notifications to the MediatR bus to
+/// enable read models to be constructed and persisted to a read database.
+/// </summary>
 public interface ISubscriptionHandler
 {
+    /// <summary>
+    /// Subscribe to the all stream of the event store.
+    /// </summary>
+    /// <param name="ct">
+    /// Cancellation token.
+    /// </param>
     Task SubscribeToAll(CancellationToken ct);
 }
 
@@ -41,50 +49,52 @@ public class SubscriptionHandler : ISubscriptionHandler
 
         var position = await _revisionRepository.GetStreamPosition(PROJECTION_NAME);
 
-        await _eventClient.SubscribeToAllAsync(
-            position.HasValue ? FromAll.After(position.Value) : FromAll.Start,
-            eventAppeared: HandleEvent,
-            subscriptionDropped: HandleDrop,
+        await _eventClient.SubscribeToAllStreamAsync(
+            position,
+            onEventAppeared: HandleEvent,
+            onSubscriptionDropped: HandleDrop,
             cancellationToken: ct
         );
 
         _logger.LogInformation("Subscription to $all stream started");
     }
 
-    private async Task HandleEvent(StreamSubscription _, ResolvedEvent resolvedEvent, CancellationToken ct)
+    private async Task HandleEvent(ISerializableEvent? @event, ulong position, CancellationToken ct)
     {
         try
         {
             using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled);
 
-            var @event = _eventClient.DeserializeFromResolvedEvent(resolvedEvent);
             if (@event is not null)
             {
                 _logger.LogInformation("Persisting changes to read model from event {Event}", @event);
 
-                await _mediator.Publish(new UpdateReadModel(@event), ct);
+                await _mediator.Publish(new EventSerialized(@event), ct);
             }
 
-            await _revisionRepository.SetStreamPosition(PROJECTION_NAME, resolvedEvent.Event.Position);
+            await _revisionRepository.SetStreamPosition(PROJECTION_NAME, position);
 
             transaction.Complete();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error consuming event {ResolvedEvent} - read model will be out of date", resolvedEvent);
+            _logger.LogError(ex, "Error consuming event {Event} - read model will be out of date", @event);
         }
     }
 
-    private void HandleDrop(StreamSubscription _, SubscriptionDroppedReason reason, Exception? exception)
+    private void HandleDrop(string reason, Exception? exception)
     {
         _logger.LogError(
             exception,
-            "Subscription to $all dropped with '{Reason}'",
+            "Subscription to $all dropped because {Reason}",
             reason
         );
     }
 }
 
+/// <summary>
+/// Hosted service that handles the subscription to the event store "all" stream.
+/// </summary>
 public class SubscriptionHandlerHostedService : IHostedService
 {
     private readonly ISubscriptionHandler _handler;

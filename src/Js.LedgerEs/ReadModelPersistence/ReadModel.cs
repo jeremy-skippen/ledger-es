@@ -4,10 +4,10 @@ using MediatR;
 
 namespace Js.LedgerEs.ReadModelPersistence;
 
+/// <summary>
+/// Represents an aggregate used for data presentation.
+/// Read models can be serialized to a secondary data store to populate materialized views.
+/// </summary>
 public interface IReadModel : IAggregate
 {
 }
-
-public sealed record UpdateReadModel(ISerializableEvent Event) : INotification;
-
-public sealed record NotifyReadModelUpdated<T>(T Model) : INotification where T : class, IReadModel;

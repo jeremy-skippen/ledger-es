@@ -2,16 +2,14 @@
 
 using FluentValidation;
 
+using Js.LedgerEs.Cqrs;
 using Js.LedgerEs.EventSourcing;
-
-using MediatR;
 
 namespace Js.LedgerEs.Ledgers;
 
 public sealed record CloseLedger(
     Guid LedgerId
-) : ICommand,
-    IRequest<LedgerClosed>
+) : ICommand<LedgerClosed>
 {
     public Guid GetStreamUniqueIdentifier() => LedgerId;
 }

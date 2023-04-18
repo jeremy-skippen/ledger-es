@@ -35,7 +35,3 @@ public interface IAggregate
     /// </param>
     void Apply(ISerializableEvent? @event);
 }
-
-public interface IWriteModel : IAggregate
-{
-}
