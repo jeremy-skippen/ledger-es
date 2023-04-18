@@ -1,10 +1,12 @@
-﻿using System.Reflection;
+﻿using EventStore.Client;
+
+using System.Reflection;
 
 namespace Js.LedgerEs.EventSourcing;
 
 public static class EventSourcingDependencyExtensions
 {
-    public static IServiceCollection AddEventSerialization(this IServiceCollection services, params Assembly[] assemblies)
+    public static IServiceCollection AddEventSourcing(this IServiceCollection services, IConfiguration configuration, params Assembly[] assemblies)
     {
         var types = assemblies.SelectMany(
             a => a
@@ -16,7 +18,9 @@ public static class EventSourcingDependencyExtensions
         foreach (var type in types)
             services.AddSingleton(new SerializableEventRegistration(type.Name, type));
 
-        services.AddSingleton<IEventClient, EventClient>();
+        services
+            .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(configuration.GetConnectionString("EventStore"))))
+            .AddSingleton<IEventClient, EventClient>();
 
         return services;
     }

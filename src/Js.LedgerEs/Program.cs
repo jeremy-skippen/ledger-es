@@ -1,5 +1,3 @@
-using EventStore.Client;
-
 using Js.LedgerEs;
 using Js.LedgerEs.Configuration;
 using Js.LedgerEs.Dashboard;
@@ -32,8 +30,7 @@ builder.Services
         cfg.AddValidationBehavior();
         cfg.RegisterServicesFromAssembly(assembly);
     })
-    .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(builder.Configuration.GetConnectionString("EventStore"))))
-    .AddEventSerialization(assembly)
+    .AddEventSourcing(builder.Configuration, assembly)
     .AddReadModelPersistence()
     .AddCors(opt =>
     {

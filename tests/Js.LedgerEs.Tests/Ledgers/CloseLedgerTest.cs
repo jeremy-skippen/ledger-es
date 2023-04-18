@@ -2,7 +2,6 @@
 
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Ledgers;
-using Js.LedgerEs.Validation;
 
 using MediatR;
 
