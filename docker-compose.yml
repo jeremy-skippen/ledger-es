@@ -15,7 +15,7 @@ services:
       EVENTSTORE_ENABLE_EXTERNAL_TCP: "true"
       EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP: "true"
     healthcheck:
-      test: curl --fail --insecure https://localhost:2113/health/live || exit 1
+      test: curl --fail http://localhost:2113/health/live || exit 1
       interval: 5s
       timeout: 5s
       retries: 24
@@ -37,7 +37,7 @@ services:
       SA_PASSWORD: "X13ppP2prRi6fPmW"
       MSSQL_PID: "Developer"
     healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "X13ppP2prRi6fPmW" -Q "SELECT 1" || exit 1
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 3s
       retries: 10
@@ -51,6 +51,36 @@ services:
       - ./volumes/mssql/data:/var/opt/mssql/data
       - ./volumes/mssql/log:/var/opt/mssql/log
       - ./volumes/mssql/secrets:/var/opt/mssql/secrets
+  ledger-es-api:
+    build:
+      dockerfile: ./Dockerfile.Api
+    hostname: api.ledger-es.local
+    environment:
+      ConnectionStrings__EventStore: "esdb://192.168.1.2:2113?tls=false"
+      ConnectionStrings__SqlServer: "Data Source=192.168.1.3;Initial Catalog=ledger-es;User Id=sa;Password=X13ppP2prRi6fPmW;Trust Server Certificate=true;"
+    ports:
+      - 8082:80
+      - 8083:443
+    networks:
+      ledger-es-default:
+        ipv4_address: 192.168.1.4
+    depends_on:
+      eventstore.db:
+        condition: service_healthy
+      mssql:
+        condition: service_healthy
+  ledger-es-ui:
+    build:
+      dockerfile: ./Dockerfile.Ui
+    hostname: ui.ledger-es.local
+    ports:
+     - 8080:80
+    networks:
+      ledger-es-default:
+        ipv4_address: 192.168.1.5
+    depends_on:
+      ledger-es-api:
+        condition: service_healthy
 
 networks:
   ledger-es-default:

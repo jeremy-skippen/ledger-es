@@ -1,7 +1,9 @@
 **/*.*proj.user
 **/.vs/*
 **/bin
+**/dist
 **/obj
+node_modules
 volumes/eventstore.db/data
 volumes/eventstore.db/logs
 volumes/mssql/data
