@@ -18,7 +18,7 @@ public interface IAggregate
     /// <list type="number">
     /// <item>Replaying the history of events for a stream on an empty aggregate - this is typical when an aggregate
     /// is required to validate preconditions before committing a new event to the event store</item>
-    /// <item>Deserialized from the read model - this would happen when recalculating a read model after an event has
+    /// <item>Deserialized from the view model - this would happen when recalculating a view model after an event has
     /// been committed to the event store</item>
     /// </list>
     /// This value is used for optimistic concurrency when writing to the event store and when projecting the read

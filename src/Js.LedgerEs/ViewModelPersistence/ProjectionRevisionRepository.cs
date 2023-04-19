@@ -5,7 +5,7 @@ using Js.LedgerEs.Configuration;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
-namespace Js.LedgerEs.ReadModelPersistence;
+namespace Js.LedgerEs.ViewModelPersistence;
 
 /// <summary>
 /// Repository used to store the position in the "all" stream for a projection.

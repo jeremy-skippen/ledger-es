@@ -2,7 +2,7 @@
 
 using MediatR;
 
-namespace Js.LedgerEs.ReadModelPersistence;
+namespace Js.LedgerEs.ViewModelPersistence;
 
 /// <summary>
 /// A notification emitted when a new event is serialized to the event store.
@@ -13,12 +13,12 @@ namespace Js.LedgerEs.ReadModelPersistence;
 public sealed record EventSerialized(ISerializableEvent Event) : INotification;
 
 /// <summary>
-/// A notification emitted when a read model is updated and written to the read database.
+/// A notification emitted when a view model is updated and written to the read database.
 /// </summary>
 /// <typeparam name="T">
-/// The type of the read model.
+/// The type of the view model.
 /// </typeparam>
 /// <param name="Model">
-/// The read model that was updated.
+/// The view model that was updated.
 /// </param>
-public sealed record ReadModelUpdated<T>(T Model) : INotification where T : class, IReadModel;
+public sealed record ViewModelUpdated<T>(T Model) : INotification where T : class, IViewModel;

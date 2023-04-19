@@ -4,11 +4,11 @@ using Js.LedgerEs.EventSourcing;
 
 using MediatR;
 
-namespace Js.LedgerEs.ReadModelPersistence;
+namespace Js.LedgerEs.ViewModelPersistence;
 
 /// <summary>
 /// Handles a persistent subscription to the event store "all" stream and emits notifications to the MediatR bus to
-/// enable read models to be constructed and persisted to a read database.
+/// enable view models to be constructed and persisted to a read database.
 /// </summary>
 public interface ISubscriptionHandler
 {
@@ -67,7 +67,7 @@ public class SubscriptionHandler : ISubscriptionHandler
 
             if (@event is not null)
             {
-                _logger.LogInformation("Persisting changes to read model from event {Event}", @event);
+                _logger.LogInformation("Persisting changes to view model from event {Event}", @event);
 
                 await _mediator.Publish(new EventSerialized(@event), ct);
             }
@@ -78,7 +78,7 @@ public class SubscriptionHandler : ISubscriptionHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error consuming event {Event} - read model will be out of date", @event);
+            _logger.LogError(ex, "Error consuming event {Event} - view model will be out of date", @event);
         }
     }
 

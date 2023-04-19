@@ -1,7 +1,7 @@
 ﻿using Dapper;
 
 using Js.LedgerEs.Configuration;
-using Js.LedgerEs.ReadModelPersistence;
+using Js.LedgerEs.ViewModelPersistence;
 
 using MediatR;
 
@@ -90,14 +90,14 @@ public sealed class DashboardEventSerializedNotificationHandler : INotificationH
                 }
             );
             if (rowsAffected != 1)
-                _logger.LogWarning("{RowsUpdated} rows affected writing read model, expected 1", rowsAffected);
+                _logger.LogWarning("{RowsUpdated} rows affected writing view model, expected 1", rowsAffected);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to write read model - read model will be out of date: {Message}", ex.Message);
+            _logger.LogError(ex, "Failed to write view model - view model will be out of date: {Message}", ex.Message);
             return;
         }
 
-        await _mediator.Publish(new ReadModelUpdated<DashboardReadModel>(dashboard), cancellationToken);
+        await _mediator.Publish(new ViewModelUpdated<DashboardViewModel>(dashboard), cancellationToken);
     }
 }

@@ -3,7 +3,7 @@ using Js.LedgerEs.Dashboard;
 using Js.LedgerEs.ErrorHandling;
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Ledgers;
-using Js.LedgerEs.ReadModelPersistence;
+using Js.LedgerEs.ViewModelPersistence;
 using Js.LedgerEs.Validation;
 
 using Microsoft.OpenApi.Models;
@@ -23,7 +23,7 @@ builder.Services
     })
     .AddSingleton(JsonConfig.SerializerOptions)
     .AddLogging()
-    .AddAutoMapper(typeof(LedgerCommandToSerializableEventMappingProfile))
+    .AddAutoMapper(assembly)
     .AddValidators()
     .AddMediatR(cfg =>
     {
@@ -31,7 +31,7 @@ builder.Services
         cfg.RegisterServicesFromAssembly(assembly);
     })
     .AddEventSourcing(builder.Configuration, assembly)
-    .AddReadModelPersistence()
+    .AddViewModelPersistence()
     .AddCors(opt =>
     {
         opt.AddPolicy(CORS_POLICY_NAME, builder =>
@@ -64,10 +64,9 @@ builder.Logging
     .ClearProviders()
     .AddConsole();
 
-var app = builder.Build();
+var wapp = builder.Build();
 
-app
-    .UseErrorHandling()
+wapp.UseErrorHandling()
     .UseValidation()
     .UseCors(CORS_POLICY_NAME)
     .UseSwagger()
@@ -77,12 +76,12 @@ app
         c.RoutePrefix = "";
     });
 
-var api = app.MapGroup("/api");
-api.MapDashboardRoutes();
-api.MapLedgerRoutes();
+wapp.MapGroup("/api")
+    .MapDashboardRoutes()
+    .MapLedgerRoutes();
 
-var signalr = app.MapGroup("/signalr");
-signalr.MapDashboardHubs();
-signalr.MapLedgerHubs();
+wapp.MapGroup("/signalr")
+    .MapDashboardHubs()
+    .MapLedgerHubs();
 
-app.Run();
+wapp.Run();

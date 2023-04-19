@@ -1,12 +1,12 @@
-﻿namespace Js.LedgerEs.ReadModelPersistence;
+﻿namespace Js.LedgerEs.ViewModelPersistence;
 
 /// <summary>
-/// Contains methods used to register the hosted service that handles read model persistence.
+/// Contains methods used to register the hosted service that handles view model persistence.
 /// </summary>
-public static class ReadModelPersistenceDependencyInjection
+public static class ViewModelPersistenceDependencyInjection
 {
     /// <summary>
-    /// Add the hosted service and register related services required for read model persistence.
+    /// Add the hosted service and register related services required for view model persistence.
     /// </summary>
     /// <param name="services">
     /// The service collection.
@@ -14,7 +14,7 @@ public static class ReadModelPersistenceDependencyInjection
     /// <returns>
     /// The service collection, for chaining.
     /// </returns>
-    public static IServiceCollection AddReadModelPersistence(this IServiceCollection services)
+    public static IServiceCollection AddViewModelPersistence(this IServiceCollection services)
         => services
             .AddTransient<IProjectionRevisionRepository, ProjectionRevisionRepository>()
             .AddTransient<ISubscriptionHandler, SubscriptionHandler>()

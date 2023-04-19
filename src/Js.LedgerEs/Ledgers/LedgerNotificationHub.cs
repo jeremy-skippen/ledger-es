@@ -1,4 +1,4 @@
-﻿using Js.LedgerEs.ReadModelPersistence;
+﻿using Js.LedgerEs.ViewModelPersistence;
 
 using MediatR;
 
@@ -8,8 +8,8 @@ namespace Js.LedgerEs.Ledgers;
 
 public interface ILedgerNotificationClient
 {
-    Task LedgerAdded(LedgerReadModel dashboard);
-    Task LedgerUpdated(LedgerReadModel dashboard);
+    Task LedgerAdded(LedgerViewModel dashboard);
+    Task LedgerUpdated(LedgerViewModel dashboard);
 }
 
 public sealed class LedgerNotificationHub : Hub<ILedgerNotificationClient>
@@ -51,7 +51,7 @@ public sealed class LedgerNotificationHub : Hub<ILedgerNotificationClient>
     }
 }
 
-public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<ReadModelUpdated<LedgerReadModel>>
+public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<ViewModelUpdated<LedgerViewModel>>
 {
     private readonly IHubContext<LedgerNotificationHub, ILedgerNotificationClient> _hubContext;
 
@@ -60,7 +60,7 @@ public sealed class LedgerUpdatedNotificationHandler : INotificationHandler<Read
         _hubContext = hubContext;
     }
 
-    public async Task Handle(ReadModelUpdated<LedgerReadModel> notification, CancellationToken cancellationToken)
+    public async Task Handle(ViewModelUpdated<LedgerViewModel> notification, CancellationToken cancellationToken)
     {
         var model = notification.Model;
         if (model.Version == 1)

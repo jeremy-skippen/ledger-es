@@ -1,4 +1,4 @@
-﻿using Js.LedgerEs.ReadModelPersistence;
+﻿using Js.LedgerEs.ViewModelPersistence;
 
 using MediatR;
 
@@ -8,14 +8,14 @@ namespace Js.LedgerEs.Dashboard;
 
 public interface IDashboardNotificationClient
 {
-    Task DashboardUpdated(DashboardReadModel dashboard);
+    Task DashboardUpdated(DashboardViewModel dashboard);
 }
 
 public sealed class DashboardNotificationHub : Hub<IDashboardNotificationClient>
 {
 }
 
-public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<ReadModelUpdated<DashboardReadModel>>
+public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<ViewModelUpdated<DashboardViewModel>>
 {
     private readonly IHubContext<DashboardNotificationHub, IDashboardNotificationClient> _hubContext;
 
@@ -24,6 +24,6 @@ public sealed class DashboardUpdatedNotificationHandler : INotificationHandler<R
         _hubContext = hubContext;
     }
 
-    public Task Handle(ReadModelUpdated<DashboardReadModel> notification, CancellationToken cancellationToken)
+    public Task Handle(ViewModelUpdated<DashboardViewModel> notification, CancellationToken cancellationToken)
         => _hubContext.Clients.All.DashboardUpdated(notification.Model);
 }

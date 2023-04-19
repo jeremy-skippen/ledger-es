@@ -80,7 +80,7 @@ public interface IEventClient
 
     /// <summary>
     /// Subscribe to the "All" stream in the event store.
-    /// This is particularly useful for writing read models / aggregates to a separate data store.
+    /// This is particularly useful for writing view models / aggregates to a separate data store.
     /// </summary>
     /// <param name="fromPosition">
     /// Where to read the all stream from. Set to <c>0</c> to read from the beginning.

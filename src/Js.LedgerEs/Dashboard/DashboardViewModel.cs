@@ -2,11 +2,11 @@
 
 using Js.LedgerEs.EventSourcing;
 using Js.LedgerEs.Ledgers;
-using Js.LedgerEs.ReadModelPersistence;
+using Js.LedgerEs.ViewModelPersistence;
 
 namespace Js.LedgerEs.Dashboard;
 
-public sealed class DashboardReadModel : IReadModel
+public sealed class DashboardViewModel : IViewModel
 {
     public int LedgerCount { get; private set; }
     public int LedgerOpenCount { get; private set; }
@@ -23,7 +23,7 @@ public sealed class DashboardReadModel : IReadModel
     public ulong Version { get; private set; }
     public DateTimeOffset ModifiedDate { get; private set; }
 
-    public DashboardReadModel()
+    public DashboardViewModel()
     {
         LedgerCount = 0;
         LedgerOpenCount = 0;
@@ -42,7 +42,7 @@ public sealed class DashboardReadModel : IReadModel
     }
 
     [JsonConstructor]
-    public DashboardReadModel(
+    public DashboardViewModel(
         int LedgerCount,
         int LedgerOpenCount,
         int LedgerClosedCount,

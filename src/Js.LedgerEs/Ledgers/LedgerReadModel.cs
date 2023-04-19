@@ -1,11 +1,11 @@
 ﻿using System.Text.Json.Serialization;
 
 using Js.LedgerEs.EventSourcing;
-using Js.LedgerEs.ReadModelPersistence;
+using Js.LedgerEs.ViewModelPersistence;
 
 namespace Js.LedgerEs.Ledgers;
 
-public sealed class LedgerReadModel : IReadModel
+public sealed class LedgerViewModel : IViewModel
 {
     public enum JournalType
     {
@@ -35,7 +35,7 @@ public sealed class LedgerReadModel : IReadModel
 
     public DateTimeOffset ModifiedDate { get; private set; }
 
-    public LedgerReadModel()
+    public LedgerViewModel()
     {
         LedgerId = Guid.Empty;
         LedgerName = string.Empty;
@@ -47,7 +47,7 @@ public sealed class LedgerReadModel : IReadModel
     }
 
     [JsonConstructor]
-    public LedgerReadModel(
+    public LedgerViewModel(
         Guid LedgerId,
         string LedgerName,
         bool IsOpen,

@@ -5,7 +5,7 @@ using Dapper;
 
 using Js.LedgerEs.Configuration;
 using Js.LedgerEs.EventSourcing;
-using Js.LedgerEs.ReadModelPersistence;
+using Js.LedgerEs.ViewModelPersistence;
 
 using MediatR;
 
@@ -33,16 +33,19 @@ public class LedgerEventSerializedNotificationHandler : INotificationHandler<Eve
     ";
 
     private readonly IOptions<LedgerEsConfiguration> _cfg;
+    private readonly JsonSerializerOptions _jsonOptions;
     private readonly ILogger<LedgerEventSerializedNotificationHandler> _logger;
     private readonly IMediator _mediator;
 
     public LedgerEventSerializedNotificationHandler(
         IOptions<LedgerEsConfiguration> cfg,
+        JsonSerializerOptions jsonOptions,
         ILogger<LedgerEventSerializedNotificationHandler> logger,
         IMediator mediator
     )
     {
         _cfg = cfg;
+        _jsonOptions = jsonOptions;
         _logger = logger;
         _mediator = mediator;
     }
@@ -51,7 +54,7 @@ public class LedgerEventSerializedNotificationHandler : INotificationHandler<Eve
     {
         var ledgerId = request.Event.GetStreamUniqueIdentifier();
         var ledgerResponse = await _mediator.Send(new GetLedger(ledgerId), cancellationToken);
-        var ledger = ledgerResponse.Ledger ?? new LedgerReadModel();
+        var ledger = ledgerResponse.Ledger ?? new LedgerViewModel();
         var beforeVersion = ledger.Version;
 
         try
@@ -60,7 +63,7 @@ public class LedgerEventSerializedNotificationHandler : INotificationHandler<Eve
         }
         catch (InvalidStateTransitionException ex)
         {
-            _logger.LogError(ex, "Failed to apply event to existing read model - read model will be out of date: {Message}", ex.Message);
+            _logger.LogError(ex, "Failed to apply event to existing view model - view model will be out of date: {Message}", ex.Message);
             return;
         }
 
@@ -78,21 +81,21 @@ public class LedgerEventSerializedNotificationHandler : INotificationHandler<Eve
                     ledger.LedgerId,
                     ledger.LedgerName,
                     ledger.IsOpen,
-                    Entries = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(ledger.Entries, JsonConfig.SerializerOptions)),
+                    Entries = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(ledger.Entries, _jsonOptions)),
                     ledger.Balance,
                     Version = (long)ledger.Version,
                     ledger.ModifiedDate,
                 }
             );
             if (rowsAffected != 1)
-                _logger.LogWarning("{RowsUpdated} rows affected writing read model, expected 1", rowsAffected);
+                _logger.LogWarning("{RowsUpdated} rows affected writing view model, expected 1", rowsAffected);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to write read model - read model will be out of date: {Message}", ex.Message);
+            _logger.LogError(ex, "Failed to write view model - view model will be out of date: {Message}", ex.Message);
             return;
         }
 
-        await _mediator.Publish(new ReadModelUpdated<LedgerReadModel>(ledger), cancellationToken);
+        await _mediator.Publish(new ViewModelUpdated<LedgerViewModel>(ledger), cancellationToken);
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Js.LedgerEs.Ledgers;
 
-public static class LedgersDependencyInjection
+public static class LedgerRoutes
 {
-    public static void MapLedgerRoutes(this IEndpointRouteBuilder api)
+    public static IEndpointRouteBuilder MapLedgerRoutes(this IEndpointRouteBuilder api)
     {
         api.MapGet(
             "/ledger",
@@ -46,10 +46,14 @@ public static class LedgersDependencyInjection
             async (Guid ledgerId, IMediator mediator, CancellationToken ct)
                 => await mediator.Send(new CloseLedger(ledgerId), ct)
         );
+
+        return api;
     }
 
-    public static void MapLedgerHubs(this IEndpointRouteBuilder api)
+    public static IEndpointRouteBuilder MapLedgerHubs(this IEndpointRouteBuilder signalr)
     {
-        api.MapHub<LedgerNotificationHub>("/ledger");
+        signalr.MapHub<LedgerNotificationHub>("/ledger");
+
+        return signalr;
     }
 }
