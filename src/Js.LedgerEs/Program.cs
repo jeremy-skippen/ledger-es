@@ -8,7 +8,9 @@ using Js.LedgerEs.Validation;
 
 using Microsoft.OpenApi.Models;
 
+#if DEBUG
 const string CORS_POLICY_NAME = "DevPolicy";
+#endif
 
 var assembly = typeof(Program).Assembly;
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +34,7 @@ builder.Services
     })
     .AddEventSourcing(builder.Configuration, assembly)
     .AddViewModelPersistence()
+#if DEBUG
     .AddCors(opt =>
     {
         opt.AddPolicy(CORS_POLICY_NAME, builder =>
@@ -42,6 +45,7 @@ builder.Services
                 .AllowAnyHeader();
         });
     })
+#endif
     .AddProblemDetails()
     .AddEndpointsApiExplorer()
     .AddSwaggerGen(c =>
@@ -54,7 +58,11 @@ builder.Services
     })
     ;
 
-builder.Services.AddSignalR()
+builder.Services
+    .AddHealthChecks();
+
+builder.Services
+    .AddSignalR()
     .AddJsonProtocol(opt =>
     {
         opt.PayloadSerializerOptions = JsonConfig.SerializerOptions;
@@ -68,13 +76,17 @@ var wapp = builder.Build();
 
 wapp.UseErrorHandling()
     .UseValidation()
+#if DEBUG
     .UseCors(CORS_POLICY_NAME)
+#endif
     .UseSwagger()
     .UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ledger ES V1");
         c.RoutePrefix = "";
     });
+
+wapp.MapHealthChecks("/health");
 
 wapp.MapGroup("/api")
     .MapDashboardRoutes()
